@@ -16,6 +16,7 @@
     "cursor",
     "codex"
   ],
+  "license": "AGPL-3.0-only",
   "homepage": "https://crawlbrulee.com",
   "repository": {
     "type": "git",
@@ -30,7 +31,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=20"

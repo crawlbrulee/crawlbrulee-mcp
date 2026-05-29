@@ -160,4 +160,4 @@ A future `@crawlbrulee/types` npm package will replace this manual sync.
 
 ## License
 
-To be added.
+[AGPL-3.0-only](./LICENSE)
