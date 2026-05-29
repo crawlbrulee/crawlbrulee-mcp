@@ -1,6 +1,6 @@
 {
   "name": "@crawlbrulee/mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Official MCP server for the crawlbrulee API — scrape and map URLs from MCP-aware agents (Claude Code, Codex, Cursor).",
   "keywords": [
     "crawlbrulee",
@@ -28,7 +28,7 @@
   "type": "module",
   "packageManager": "pnpm@10.10.0",
   "bin": {
-    "crawlbrulee-mcp": "./dist/index.js"
+    "crawlbrulee-mcp": "dist/index.js"
   },
   "files": [
     "dist",
