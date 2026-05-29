@@ -26,6 +26,7 @@
     "url": "https://github.com/crawlbrulee/crawlbrulee-mcp/issues"
   },
   "type": "module",
+  "packageManager": "pnpm@10.10.0",
   "bin": {
     "crawlbrulee-mcp": "./dist/index.js"
   },
