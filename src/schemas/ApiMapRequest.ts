@@ -8,10 +8,13 @@ export const Schema_ApiMapLocation = z
   .object({
     country: z
       .string()
-      .regex(/^[a-zA-Z]{2}$/, 'country must be a 2-letter ISO 3166-1 alpha-2 code')
+      .regex(
+        /^([a-zA-Z]{2}|europe)$/i,
+        "country must be a 2-letter ISO 3166-1 alpha-2 code, 'eu', or 'europe'"
+      )
       .optional()
       .describe(
-        "ISO 3166-1 alpha-2 (e.g. 'us', 'de', 'br'; case-insensitive) hint for proxy egress country"
+        "ISO 3166-1 alpha-2 (e.g. 'us', 'de', 'br'; case-insensitive) hint for proxy egress country. Also accepts 'eu' (random EU member state) or 'europe' (random European state incl. UK and non-EU)."
       ),
   })
   .strict()

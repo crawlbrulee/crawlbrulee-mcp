@@ -37,10 +37,18 @@ describe('MCP server', () => {
   })
 
   describe('tool discovery', () => {
-    it('exposes scrape, map, usage, whoami with descriptions and schemas', async () => {
+    it('exposes all sync + async tools with descriptions and schemas', async () => {
       const { tools } = await harness.client.listTools()
       const names = tools.map(t => t.name).sort()
-      expect(names).toEqual(['map', 'scrape', 'usage', 'whoami'])
+      expect(names).toEqual([
+        'map',
+        'scrape',
+        'scrape_async',
+        'scrape_result',
+        'scrape_status',
+        'usage',
+        'whoami',
+      ])
       for (const tool of tools) {
         expect(tool.description?.length ?? 0).toBeGreaterThan(0)
         expect(tool.inputSchema).toBeTruthy()
@@ -52,6 +60,25 @@ describe('MCP server', () => {
       const { tools } = await harness.client.listTools()
       const scrape = tools.find(t => t.name === 'scrape')
       expect(scrape?.inputSchema.properties).toMatchObject({ url: {}, extract: {} })
+    })
+
+    it('scrape_async input schema extends scrape with an optional webhook field', async () => {
+      const { tools } = await harness.client.listTools()
+      const asyncScrape = tools.find(t => t.name === 'scrape_async')
+      expect(asyncScrape?.inputSchema.properties).toMatchObject({
+        url: {},
+        extract: {},
+        webhook: {},
+      })
+    })
+
+    it('scrape_status and scrape_result take a job_id input', async () => {
+      const { tools } = await harness.client.listTools()
+      for (const name of ['scrape_status', 'scrape_result']) {
+        const tool = tools.find(t => t.name === name)
+        expect(tool?.inputSchema.properties).toMatchObject({ job_id: {} })
+        expect(tool?.inputSchema.required).toContain('job_id')
+      }
     })
   })
 
@@ -79,6 +106,120 @@ describe('MCP server', () => {
       expect(Array.isArray(res.content) ? res.content[0] : undefined).toMatchObject({
         type: 'text',
       })
+    })
+  })
+
+  describe('scrape_async tool', () => {
+    it('forwards the request to scrapeAsync and returns the job_id', async () => {
+      harness.mock.scrapeAsync.mockResolvedValueOnce({ job_id: 'job_123' })
+
+      const res = await harness.client.callTool({
+        name: 'scrape_async',
+        arguments: { url: 'https://example.com', extract: { markdown: true } },
+      })
+
+      expect(harness.mock.scrapeAsync).toHaveBeenCalledTimes(1)
+      const [call] = harness.mock.scrapeAsync.mock.calls
+      expect(call?.[0]).toMatchObject({
+        url: 'https://example.com',
+        extract: { markdown: true },
+      })
+      expect(res.isError).toBeFalsy()
+      expect(res.structuredContent).toEqual({ job_id: 'job_123' })
+    })
+
+    it('flows webhook.url and webhook.metadata through to the SDK call', async () => {
+      harness.mock.scrapeAsync.mockResolvedValueOnce({ job_id: 'job_456' })
+
+      const res = await harness.client.callTool({
+        name: 'scrape_async',
+        arguments: {
+          url: 'https://example.com',
+          webhook: {
+            url: 'https://hooks.example.com/cwbl',
+            metadata: { ref: 'order-42', tenant: 7 },
+          },
+        },
+      })
+
+      expect(res.isError).toBeFalsy()
+      const [call] = harness.mock.scrapeAsync.mock.calls
+      expect(call?.[0]).toMatchObject({
+        url: 'https://example.com',
+        webhook: {
+          url: 'https://hooks.example.com/cwbl',
+          metadata: { ref: 'order-42', tenant: 7 },
+        },
+      })
+    })
+
+    it('rejects a webhook url that is not a valid URL', async () => {
+      const res = await harness.client.callTool({
+        name: 'scrape_async',
+        arguments: { url: 'https://example.com', webhook: { url: 'not-a-url' } },
+      })
+
+      expect(res.isError).toBe(true)
+      expect(harness.mock.scrapeAsync).not.toHaveBeenCalled()
+    })
+
+    it("accepts location.country pseudo-values 'eu' and 'europe'", async () => {
+      harness.mock.scrapeAsync.mockResolvedValue({ job_id: 'job_eu' })
+
+      for (const country of ['eu', 'europe', 'EUROPE', 'de']) {
+        const res = await harness.client.callTool({
+          name: 'scrape_async',
+          arguments: { url: 'https://example.com', location: { country } },
+        })
+        expect(res.isError, `country=${country}`).toBeFalsy()
+      }
+
+      const rejected = await harness.client.callTool({
+        name: 'scrape_async',
+        arguments: { url: 'https://example.com', location: { country: 'usa' } },
+      })
+      expect(rejected.isError).toBe(true)
+    })
+  })
+
+  describe('scrape_status tool', () => {
+    it('calls getScrapeStatus with the job_id and returns the status', async () => {
+      const status = {
+        jobId: 'job_123',
+        status: 'running',
+        createdAt: '2026-06-13T00:00:00.000Z',
+      }
+      harness.mock.getScrapeStatus.mockResolvedValueOnce(status)
+
+      const res = await harness.client.callTool({
+        name: 'scrape_status',
+        arguments: { job_id: 'job_123' },
+      })
+
+      expect(harness.mock.getScrapeStatus).toHaveBeenCalledTimes(1)
+      expect(harness.mock.getScrapeStatus.mock.calls[0]?.[0]).toBe('job_123')
+      expect(res.isError).toBeFalsy()
+      expect(res.structuredContent).toEqual(status)
+    })
+  })
+
+  describe('scrape_result tool', () => {
+    it('calls getScrapeResult with the job_id and returns the scrape result', async () => {
+      const sdkResponse = {
+        url: 'https://example.com',
+        metadata: { title: 'Example Domain' },
+      }
+      harness.mock.getScrapeResult.mockResolvedValueOnce(sdkResponse)
+
+      const res = await harness.client.callTool({
+        name: 'scrape_result',
+        arguments: { job_id: 'job_123' },
+      })
+
+      expect(harness.mock.getScrapeResult).toHaveBeenCalledTimes(1)
+      expect(harness.mock.getScrapeResult.mock.calls[0]?.[0]).toBe('job_123')
+      expect(res.isError).toBeFalsy()
+      expect(res.structuredContent).toEqual(sdkResponse)
     })
   })
 

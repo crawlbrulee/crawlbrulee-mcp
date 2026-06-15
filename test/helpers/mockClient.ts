@@ -4,6 +4,9 @@ import { vi, type Mock } from 'vitest'
 export interface MockedCrawlbrulee {
   client: Crawlbrulee
   scrape: Mock
+  scrapeAsync: Mock
+  getScrapeStatus: Mock
+  getScrapeResult: Mock
   map: Mock
   usage: Mock
   whoami: Mock
@@ -15,9 +18,20 @@ export interface MockedCrawlbrulee {
  */
 export function makeMockedClient(): MockedCrawlbrulee {
   const scrape = vi.fn()
+  const scrapeAsync = vi.fn()
+  const getScrapeStatus = vi.fn()
+  const getScrapeResult = vi.fn()
   const map = vi.fn()
   const usage = vi.fn()
   const whoami = vi.fn()
-  const client = { scrape, map, usage, whoami } as unknown as Crawlbrulee
-  return { client, scrape, map, usage, whoami }
+  const client = {
+    scrape,
+    scrapeAsync,
+    getScrapeStatus,
+    getScrapeResult,
+    map,
+    usage,
+    whoami,
+  } as unknown as Crawlbrulee
+  return { client, scrape, scrapeAsync, getScrapeStatus, getScrapeResult, map, usage, whoami }
 }

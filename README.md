@@ -7,7 +7,7 @@ The official [Model Context Protocol](https://modelcontextprotocol.io) server fo
 - Stdio transport for terminal-based agents.
 - Strict, fully-described tool schemas — agents see what every parameter does without reading docs.
 
-> **Status:** v0.1.0 (beta). Tool surface is stabilizing — expect minor changes between 0.x releases.
+> **Status:** v0.2.0 (beta). Tool surface is stabilizing — expect minor changes between 0.x releases.
 
 ---
 
@@ -74,6 +74,47 @@ HTML, raw HTML, links, images, screenshot, page metadata).
 
 **Output** — full scrape result. Screenshots are returned as signed download URLs the agent can fetch separately.
 
+### `scrape_async`
+
+Submit a scrape job to run **asynchronously** and get back a `job_id` immediately, instead of holding the connection open. Use this for long-running scrapes (heavy JS rendering, full-page screenshots of long pages); for a quick one-shot fetch prefer the synchronous `scrape` tool. Then poll `scrape_status` until the job is `done` and fetch the page with `scrape_result`.
+
+Takes the same input as `scrape` plus an optional per-job completion `webhook`:
+
+```jsonc
+{
+  "url": "https://example.com",
+  "extract": { "markdown": true },
+  "webhook": {
+    // Endpoint that receives one signed `scrape.complete` POST when the job
+    // finishes. http/https (HTTPS required in production), max 2048 chars.
+    "url": "https://hooks.example.com/cwbl",
+    // Opaque correlation object echoed back verbatim in the delivery's
+    // `data.metadata`. Serializes to at most 2048 bytes.
+    "metadata": { "ref": "order-42" },
+  },
+}
+```
+
+**Output** — `{ "job_id": "..." }`.
+
+When a `webhook` is attached, crawlbrulee delivers a single signed `scrape.complete` POST to your endpoint once the job reaches a terminal state, with your `metadata` echoed under `data.metadata` — so you can react to completion without polling. Verify the `X-Cwbl-Signature` header with the SDK's `verifyWebhookSignature` (configure the signing secret in the dashboard under Account → Webhooks).
+
+### `scrape_status`
+
+Look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). Poll until `done`, then call `scrape_result`.
+
+```jsonc
+{ "job_id": "..." }
+```
+
+### `scrape_result`
+
+Fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool. Errors if the job is still `pending`/`running`, so check `scrape_status` first.
+
+```jsonc
+{ "job_id": "..." }
+```
+
 ### `map`
 
 Build (or fetch a cached) link-map for a website. Combines sitemap discovery with homepage link extraction. Use this to enumerate a site before scraping selected pages.
@@ -109,23 +150,23 @@ Every tool returns an MCP error envelope (`isError: true`) when the API call fai
 
 Agents can branch on the `errorName` code. The set comes from the SDK's `ApiErrorName` union plus two synthetic codes added by this MCP (`missing_api_key`, `internal_error`):
 
-| Code                     | Meaning                                                       |
-| ------------------------ | ------------------------------------------------------------- |
-| `missing_api_key`        | `CRAWLBRULEE_API_KEY` is not set in the MCP host's env.       |
-| `invalid_credentials`    | Server rejected the API key (revoked, wrong env, etc.).       |
-| `too_many_requests`      | Rate limit hit — back off and retry.                          |
-| `usage_allocation_error` | Plan credit / concurrency cap exceeded. Show `usage` to user. |
-| `validation_error`       | Input failed server validation.                               |
-| `invalid_url`            | Target URL was rejected before fetching.                      |
-| `blocked_url`            | Target URL is on the blocklist.                               |
-| `antibot_blocked`        | Origin's anti-bot defenses blocked the fetch.                 |
-| `scrape_error`           | Origin returned an error during scraping.                     |
-| `not_found`              | Async job ID unknown (reserved for future async tools).       |
-| `request_timeout`        | Network / read timeout. Safe to retry.                        |
-| `client_closed_request`  | Caller cancelled before completion.                           |
-| `internal_server_error`  | Unhandled server-side failure.                                |
-| `crawlbrulee_error`      | SDK error without a typed name.                               |
-| `internal_error`         | Bug in this MCP — please open an issue.                       |
+| Code                     | Meaning                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| `missing_api_key`        | `CRAWLBRULEE_API_KEY` is not set in the MCP host's env.                        |
+| `invalid_credentials`    | Server rejected the API key (revoked, wrong env, etc.).                        |
+| `too_many_requests`      | Rate limit hit — back off and retry.                                           |
+| `usage_allocation_error` | Plan credit / concurrency cap exceeded. Show `usage` to user.                  |
+| `validation_error`       | Input failed server validation.                                                |
+| `invalid_url`            | Target URL was rejected before fetching.                                       |
+| `blocked_url`            | Target URL is on the blocklist.                                                |
+| `antibot_blocked`        | Origin's anti-bot defenses blocked the fetch.                                  |
+| `scrape_error`           | Origin returned an error during scraping.                                      |
+| `not_found`              | Async job ID unknown (e.g. bad `job_id` to `scrape_status` / `scrape_result`). |
+| `request_timeout`        | Network / read timeout. Safe to retry.                                         |
+| `client_closed_request`  | Caller cancelled before completion.                                            |
+| `internal_server_error`  | Unhandled server-side failure.                                                 |
+| `crawlbrulee_error`      | SDK error without a typed name.                                                |
+| `internal_error`         | Bug in this MCP — please open an issue.                                        |
 
 ---
 
