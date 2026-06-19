@@ -9,8 +9,9 @@ import type { ApiScrapeSuccessResponse, AsyncJobId } from '../schemas/index.js'
 const DESCRIPTION = [
   'Fetch the extracted content of a completed async scrape job (the same result shape as the',
   'synchronous `scrape` tool: markdown, cleaned HTML, raw HTML, links, images, screenshot,',
-  'page metadata). Errors if the job is still `pending`/`running` — check `scrape_status`',
-  'first (status `done`) before calling this. Screenshot URLs are signed download links.',
+  'page metadata in `metadata`, and `response_meta.usage`). Errors if the job is still',
+  '`pending`/`running` — check `scrape_status` first (status `done`) before calling this.',
+  'Screenshot URLs are signed download links.',
 ].join(' ')
 
 export function registerScrapeResultTool(

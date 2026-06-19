@@ -87,6 +87,7 @@ describe('MCP server', () => {
       const sdkResponse = {
         url: 'https://example.com',
         metadata: { title: 'Example Domain' },
+        response_meta: { usage: { credits: 1, proxy: 'basic', cache_hit: false } },
       }
       harness.mock.scrape.mockResolvedValueOnce(sdkResponse)
 
@@ -201,6 +202,24 @@ describe('MCP server', () => {
       expect(res.isError).toBeFalsy()
       expect(res.structuredContent).toEqual(status)
     })
+
+    it('surfaces response_meta.usage when the job is done', async () => {
+      const status = {
+        jobId: 'job_123',
+        status: 'done',
+        createdAt: '2026-06-13T00:00:00.000Z',
+        response_meta: { usage: { credits: 2, proxy: 'advanced', cache_hit: false } },
+      }
+      harness.mock.getScrapeStatus.mockResolvedValueOnce(status)
+
+      const res = await harness.client.callTool({
+        name: 'scrape_status',
+        arguments: { job_id: 'job_123' },
+      })
+
+      expect(res.isError).toBeFalsy()
+      expect(res.structuredContent).toEqual(status)
+    })
   })
 
   describe('scrape_result tool', () => {
@@ -208,6 +227,7 @@ describe('MCP server', () => {
       const sdkResponse = {
         url: 'https://example.com',
         metadata: { title: 'Example Domain' },
+        response_meta: { usage: { credits: 0, proxy: 'none', cache_hit: true } },
       }
       harness.mock.getScrapeResult.mockResolvedValueOnce(sdkResponse)
 
@@ -227,7 +247,7 @@ describe('MCP server', () => {
     it('returns the discovered links', async () => {
       const sdkResponse = {
         links: [{ url: 'https://example.com/a' }, { url: 'https://example.com/b' }],
-        meta: {
+        response_meta: {
           pagination: {
             page: 1,
             limit: 10000,
@@ -241,6 +261,7 @@ describe('MCP server', () => {
             total_before_max_urls: 2,
             total_detected_before_storage_cap: 2,
           },
+          usage: { credits: 1, proxy: 'basic', cache_hit: false },
         },
       }
       harness.mock.map.mockResolvedValueOnce(sdkResponse)

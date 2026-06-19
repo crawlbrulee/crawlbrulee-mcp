@@ -46,6 +46,32 @@ export const Schema_ApiPageLink = z.object({
   internal: z.boolean().describe('Whether the link points to the same domain'),
 })
 
+// Resolved proxy tier the request actually ran on. Never `auto` — the server
+// resolves `auto` to a concrete tier and reports the resolved value here.
+export const API_RESOLVED_PROXY_TIER_VALUES = ['none', 'basic', 'advanced'] as const
+
+export const Schema_ApiUsageMeta = z.object({
+  credits: z
+    .number()
+    .int()
+    .nonnegative()
+    .describe('Credits charged for this request. `0` on a cache hit (no fresh fetch was billed).'),
+  proxy: z
+    .enum(API_RESOLVED_PROXY_TIER_VALUES)
+    .describe(
+      'The proxy tier the request actually ran on (resolved value — never `auto`; `auto` is resolved server-side to `none`, `basic`, or `advanced`).'
+    ),
+  cache_hit: z
+    .boolean()
+    .describe('Whether the result was served from cache (`true`) or freshly fetched (`false`).'),
+})
+
+export const Schema_ApiResponseMeta = z.object({
+  usage: Schema_ApiUsageMeta.describe(
+    'Usage accounting for this request: credits charged, resolved proxy tier, and cache-hit flag.'
+  ),
+})
+
 export const Schema_ApiScrapeMeta = z.object({
   title: z.string().optional().describe('Page title from the <title> tag'),
   description: z.string().optional().describe('Meta description'),
@@ -101,6 +127,11 @@ export const Schema_ApiScrapeSuccessResponse = z.object({
     .describe(
       'Non-error notices about the scrape (e.g. `screenshot_truncated` when a long page exceeded the scrolling-screenshot height cap). Stable string codes — clients can switch on them. Currently surfaced only on fresh scrapes; cache hits omit warnings.'
     ),
+  response_meta: Schema_ApiResponseMeta.describe(
+    'Request-level metadata. `response_meta.usage` reports credits charged (0 on a cache hit), the resolved proxy tier, and the cache-hit flag.'
+  ),
 })
 
+export type ApiUsageMeta = z.infer<typeof Schema_ApiUsageMeta>
+export type ApiResponseMeta = z.infer<typeof Schema_ApiResponseMeta>
 export type ApiScrapeSuccessResponse = z.infer<typeof Schema_ApiScrapeSuccessResponse>

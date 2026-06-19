@@ -72,7 +72,22 @@ HTML, raw HTML, links, images, screenshot, page metadata).
 }
 ```
 
-**Output** — full scrape result. Screenshots are returned as signed download URLs the agent can fetch separately.
+**Output** — full scrape result. Page metadata (title, OG tags, etc.) is returned under `metadata`. Screenshots are returned as signed download URLs the agent can fetch separately. The result also carries a top-level `response_meta.usage` block:
+
+```jsonc
+{
+  "url": "https://example.com",
+  "markdown": "...",
+  "metadata": { "title": "Example Domain" },
+  "response_meta": {
+    "usage": {
+      "credits": 1, // credits charged — 0 on a cache hit
+      "proxy": "basic", // resolved tier actually used: "none" | "basic" | "advanced" (never "auto")
+      "cache_hit": false, // whether the result was served from cache
+    },
+  },
+}
+```
 
 ### `scrape_async`
 
@@ -97,11 +112,11 @@ Takes the same input as `scrape` plus an optional per-job completion `webhook`:
 
 **Output** — `{ "job_id": "..." }`.
 
-When a `webhook` is attached, crawlbrulee delivers a single signed `scrape.complete` POST to your endpoint once the job reaches a terminal state, with your `metadata` echoed under `data.metadata` — so you can react to completion without polling. Verify the `X-Cwbl-Signature` header with the SDK's `verifyWebhookSignature` (configure the signing secret in the dashboard under Account → Webhooks).
+When a `webhook` is attached, crawlbrulee delivers a single signed `scrape.complete` POST to your endpoint once the job reaches a terminal state, with your `metadata` echoed under `data.metadata` and the job's usage under `data.response_meta.usage` — so you can react to completion (and reconcile cost) without polling. Verify the `X-Cwbl-Signature` header with the SDK's `verifyWebhookSignature` (configure the signing secret in the dashboard under Account → Webhooks).
 
 ### `scrape_status`
 
-Look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). Poll until `done`, then call `scrape_result`.
+Look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). Once the job is `done` the response also carries a `response_meta.usage` block (`credits`, resolved `proxy` tier, `cache_hit`). Poll until `done`, then call `scrape_result`.
 
 ```jsonc
 { "job_id": "..." }
@@ -109,7 +124,7 @@ Look up the current lifecycle status of an async job: `pending`, `running`, `don
 
 ### `scrape_result`
 
-Fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool. Errors if the job is still `pending`/`running`, so check `scrape_status` first.
+Fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool (including `metadata` and `response_meta.usage`). Errors if the job is still `pending`/`running`, so check `scrape_status` first.
 
 ```jsonc
 { "job_id": "..." }
@@ -117,7 +132,7 @@ Fetch the extracted content of a completed async job — the same result shape a
 
 ### `map`
 
-Build (or fetch a cached) link-map for a website. Combines sitemap discovery with homepage link extraction. Use this to enumerate a site before scraping selected pages.
+Build (or fetch a cached) link-map for a website. Combines sitemap discovery with homepage link extraction. Use this to enumerate a site before scraping selected pages. The response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`credits`, resolved `proxy` tier, `cache_hit`).
 
 ```jsonc
 {

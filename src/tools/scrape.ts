@@ -8,9 +8,11 @@ import type { ApiScrapeRequest, ApiScrapeSuccessResponse } from '../schemas/inde
 
 const DESCRIPTION = [
   'Fetch a single URL via the crawlbrulee scraping API and return the requested content',
-  '(markdown, cleaned HTML, raw HTML, links, images, screenshot, page metadata).',
+  '(markdown, cleaned HTML, raw HTML, links, images, screenshot, page metadata in `metadata`).',
   'Use this for one-shot page extraction. For full-site discovery use the `map` tool first.',
   'Screenshot URLs in the response are signed download links — the agent can fetch them when needed.',
+  'The response also carries `response_meta.usage` = { credits (0 on a cache hit), proxy (the resolved',
+  'tier — never `auto`), cache_hit } so you can see what the request cost.',
 ].join(' ')
 
 export function registerScrapeTool(server: McpServer, getClient: CrawlbruleeClientFactory): void {

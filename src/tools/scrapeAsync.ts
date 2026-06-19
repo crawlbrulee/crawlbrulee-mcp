@@ -15,7 +15,8 @@ const DESCRIPTION = [
   'Poll the job with `scrape_status` and fetch the page with `scrape_result` once done.',
   'Optionally attach a per-job completion `webhook`: crawlbrulee delivers a single',
   'signed `scrape.complete` POST to your endpoint when the job finishes (HTTPS required',
-  'in production), and echoes your opaque `webhook.metadata` back in the delivery.',
+  'in production), and echoes your opaque `webhook.metadata` back in the delivery',
+  '(under `data.metadata`, alongside `data.response_meta.usage`).',
 ].join(' ')
 
 export function registerScrapeAsyncTool(

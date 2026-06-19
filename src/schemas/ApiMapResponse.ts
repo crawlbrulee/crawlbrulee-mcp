@@ -2,6 +2,7 @@
 // Keep in sync with the canonical source on schema bumps.
 
 import { z } from 'zod'
+import { Schema_ApiUsageMeta } from './ApiScrapeResponse.js'
 
 export const Schema_ApiMapLinkItem = z.object({
   url: z.string().describe('The discovered URL'),
@@ -32,14 +33,17 @@ export const Schema_ApiMapTruncation = z.object({
 
 export const Schema_ApiMapResult = z.object({
   links: z.array(Schema_ApiMapLinkItem).describe('List of discovered URLs for the current page'),
-  meta: z
+  response_meta: z
     .object({
       pagination: Schema_ApiMapPagination.describe('Pagination details for the result set'),
       truncation: Schema_ApiMapTruncation.describe(
         'Information about whether the results were truncated'
       ),
+      usage: Schema_ApiUsageMeta.describe(
+        'Usage accounting for this map request: credits charged (0 on a cache hit), the resolved proxy tier, and the cache-hit flag.'
+      ),
     })
-    .describe('Response metadata including pagination and truncation info'),
+    .describe('Response metadata including pagination, truncation, and usage info'),
 })
 
 export type ApiMapResult = z.infer<typeof Schema_ApiMapResult>
