@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@crawlbrulee/sdk':
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.4.0
+        version: 0.4.0
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@4.4.3)
@@ -45,8 +45,8 @@ importers:
 
 packages:
 
-  '@crawlbrulee/sdk@0.3.0':
-    resolution: {integrity: sha512-B8JFkRtQ1L1CBL1hsJHwXj6oaM2w5fFxjACIWoqTJvzWqIuZN8e5iahj6witLL99PI87b2++/Jb8rL2qJ66XBA==}
+  '@crawlbrulee/sdk@0.4.0':
+    resolution: {integrity: sha512-gR/QcK14D1dh9e0LRd+ttC+ZynM7iifSYeXjKvBhESx+ppyuPgfrcjJejjgK8cS90CszLUW+ysKB9mV47+dRxw==}
     engines: {node: '>=22'}
 
   '@esbuild/aix-ppc64@0.21.5':
@@ -1626,7 +1626,7 @@ packages:
 
 snapshots:
 
-  '@crawlbrulee/sdk@0.3.0': {}
+  '@crawlbrulee/sdk@0.4.0': {}
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
