@@ -7,7 +7,7 @@ The official [Model Context Protocol](https://modelcontextprotocol.io) server fo
 - Stdio transport for terminal-based agents.
 - Strict, fully-described tool schemas — agents see what every parameter does without reading docs.
 
-> **Status:** v0.2.0 (beta). Tool surface is stabilizing — expect minor changes between 0.x releases.
+> **Status:** v0.3.0 (beta). Tool surface is stabilizing — expect minor changes between 0.x releases.
 
 ---
 
