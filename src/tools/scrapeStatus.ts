@@ -30,8 +30,14 @@ export function registerScrapeStatusTool(
       outputSchema: Schema_ApiScrapeStatusResponse.shape,
     },
     (args: AsyncJobId) =>
+      // The vendored status schema tracks the live wire contract, which has been
+      // uniformly snake_case (job_id, created_at) since 2026-06-13. The published
+      // SDK's `AsyncJobStatusResponse` type still encodes the pre-June camelCase
+      // names, so a plain cast won't type-check — bridge through `unknown` until
+      // the SDK catches up. The runtime payload already matches the vendored shape.
       runTool(
-        async () => (await getClient().getScrapeStatus(args.job_id)) as ApiScrapeStatusResponse
+        async () =>
+          (await getClient().getScrapeStatus(args.job_id)) as unknown as ApiScrapeStatusResponse
       )
   )
 }

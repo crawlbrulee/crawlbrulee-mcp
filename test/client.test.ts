@@ -12,7 +12,7 @@ describe('createDefaultClientFactory', () => {
   })
 
   it('returns the same client on repeated calls (lazy memoization)', () => {
-    process.env[ENV_API_KEY] = 'cble_test_key'
+    process.env[ENV_API_KEY] = 'cwbl_test_key'
     const factory = createDefaultClientFactory()
     expect(factory()).toBe(factory())
   })

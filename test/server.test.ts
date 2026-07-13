@@ -186,9 +186,9 @@ describe('MCP server', () => {
   describe('scrape_status tool', () => {
     it('calls getScrapeStatus with the job_id and returns the status', async () => {
       const status = {
-        jobId: 'job_123',
+        job_id: 'job_123',
         status: 'running',
-        createdAt: '2026-06-13T00:00:00.000Z',
+        created_at: '2026-06-13T00:00:00.000Z',
       }
       harness.mock.getScrapeStatus.mockResolvedValueOnce(status)
 
@@ -205,9 +205,9 @@ describe('MCP server', () => {
 
     it('surfaces response_meta.usage when the job is done', async () => {
       const status = {
-        jobId: 'job_123',
+        job_id: 'job_123',
         status: 'done',
-        createdAt: '2026-06-13T00:00:00.000Z',
+        created_at: '2026-06-13T00:00:00.000Z',
         response_meta: { usage: { credits: 2, proxy: 'advanced', cache_hit: false } },
       }
       harness.mock.getScrapeStatus.mockResolvedValueOnce(status)
@@ -289,7 +289,7 @@ describe('MCP server', () => {
       harness.mock.whoami.mockResolvedValueOnce({
         organization_name: 'Acme',
         token_name: 'prod',
-        token_preview: 'cble_…abc',
+        token_preview: 'cwbl_…abc',
       })
 
       const usage = await harness.client.callTool({ name: 'usage', arguments: {} })

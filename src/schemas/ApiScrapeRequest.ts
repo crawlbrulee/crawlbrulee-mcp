@@ -22,20 +22,22 @@ export const API_PROXY_TIER_VALUES = ['basic', 'advanced', 'auto', 'none'] as co
 
 export const Schema_ApiProxyType = z
   .enum(API_PROXY_TIER_VALUES)
-  .default('basic')
+  .default('auto')
   .describe(
-    'Proxy tier: basic, advanced, auto (automatic selection), or none (no proxy — non-production only)'
+    'Proxy tier: basic, advanced, auto, or none (no proxy — non-production only). ' +
+      'Defaults to auto (automatic selection: basic tier first, escalate to advanced on failure; billed at the delivered tier).'
   )
 
 export const Schema_ApiScrapeViewport = z
   .object({
-    width: z.number().int().nonnegative().describe('Viewport width in pixels'),
-    height: z.number().int().nonnegative().describe('Viewport height in pixels'),
+    width: z.number().int().min(16).max(10000).describe('Viewport width in pixels (16–10000)'),
+    height: z.number().int().min(16).max(10000).describe('Viewport height in pixels (16–10000)'),
     device_scale_factor: z
       .number()
-      .nonnegative()
+      .min(1)
+      .max(4)
       .optional()
-      .describe('Device pixel ratio (e.g. 2 for Retina)'),
+      .describe('Device pixel ratio (1–4, e.g. 2 for Retina)'),
   })
   .strict()
   .describe('Custom browser viewport dimensions')

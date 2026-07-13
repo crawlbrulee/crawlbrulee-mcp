@@ -16,7 +16,7 @@ The official [Model Context Protocol](https://modelcontextprotocol.io) server fo
 ```bash
 # Claude Code
 claude mcp add crawlbrulee \
-  --env CRAWLBRULEE_API_KEY=cble_... \
+  --env CRAWLBRULEE_API_KEY=cwbl_... \
   -- npx -y @crawlbrulee/mcp
 
 # Cursor — add to ~/.cursor/mcp.json:
@@ -25,7 +25,7 @@ claude mcp add crawlbrulee \
     "crawlbrulee": {
       "command": "npx",
       "args": ["-y", "@crawlbrulee/mcp"],
-      "env": { "CRAWLBRULEE_API_KEY": "cble_..." }
+      "env": { "CRAWLBRULEE_API_KEY": "cwbl_..." }
     }
   }
 }
@@ -199,7 +199,7 @@ pnpm verify      # all of the above
 Run the built MCP locally:
 
 ```bash
-CRAWLBRULEE_API_KEY=cble_... node ./dist/index.js
+CRAWLBRULEE_API_KEY=cwbl_... node ./dist/index.js
 ```
 
 It will block waiting for an MCP client on stdio. Combine with the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) for interactive debugging.

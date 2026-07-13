@@ -46,7 +46,7 @@ export async function runTool<T>(
 }
 
 const MISSING_API_KEY_REMEDIATION =
-  `${ENV_API_KEY} is not set on the MCP host. Add --env ${ENV_API_KEY}=cble_... to your ` +
+  `${ENV_API_KEY} is not set on the MCP host. Add --env ${ENV_API_KEY}=cwbl_... to your ` +
   `"claude mcp add" command (or the equivalent env block in your MCP client config), then restart the host.`
 
 /**

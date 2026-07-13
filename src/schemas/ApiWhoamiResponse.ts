@@ -11,7 +11,7 @@ export const Schema_ApiWhoamiResponse = z.object({
   token_preview: z
     .string()
     .describe(
-      'Truncated preview of the API token (e.g. `cble_…xyz`). Safe to display; does not authenticate.'
+      'Truncated preview of the API token (e.g. `cwbl_…xyz`). Safe to display; does not authenticate.'
     ),
 })
 

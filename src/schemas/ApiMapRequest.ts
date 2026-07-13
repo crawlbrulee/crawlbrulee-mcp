@@ -48,7 +48,7 @@ export const Schema_ApiMapCache = z
 
 export const Schema_ApiMapRequest = z.object({
   url: z.string().describe('The website URL to map'),
-  proxy: Schema_ApiProxyType.default('basic').describe('Proxy tier to use for fetching'),
+  proxy: Schema_ApiProxyType.default('auto').describe('Proxy tier to use for fetching'),
   sitemap_only: z
     .boolean()
     .default(false)

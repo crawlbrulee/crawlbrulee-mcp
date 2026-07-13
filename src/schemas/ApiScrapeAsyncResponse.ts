@@ -23,15 +23,14 @@ export const Schema_ApiScrapeAsyncResponse = z.object({
 
 export type ApiScrapeAsyncResponse = z.infer<typeof Schema_ApiScrapeAsyncResponse>
 
-// Note: this status response uses camelCase field names (jobId, createdAt)
-// while most other crawlbrulee responses use snake_case — the SDK mirrors the
-// wire format faithfully, so we do too.
+// The status response is uniformly snake_case (job_id, created_at), matching
+// the rest of the crawlbrulee wire format. We mirror it 1:1 — no case mapping.
 export const Schema_ApiScrapeStatusResponse = z.object({
-  jobId: z.string().describe('The job identifier'),
+  job_id: z.string().describe('The job identifier'),
   status: z
     .enum(ASYNC_JOB_STATUS_VALUES)
     .describe('Current state of the job (pending, running, done, failed)'),
-  createdAt: z.string().describe('ISO-8601 UTC timestamp when the job was created'),
+  created_at: z.string().describe('ISO-8601 UTC timestamp when the job was created'),
   error: z.string().optional().describe('Error message if the job ended in `failed`'),
   response_meta: Schema_ApiResponseMeta.optional().describe(
     'Usage accounting for the finished job. Present only once the job is `done`; ' +
