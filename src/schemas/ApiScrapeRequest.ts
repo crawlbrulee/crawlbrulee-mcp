@@ -25,7 +25,7 @@ export const Schema_ApiProxyType = z
   .default('auto')
   .describe(
     'Proxy tier: basic, advanced, auto, or none (no proxy — non-production only). ' +
-      'Defaults to auto (automatic selection: basic tier first, escalate to advanced on failure; billed at the delivered tier).'
+      'Defaults to auto (automatic selection: basic tier first, escalates to advanced on failure).'
   )
 
 export const Schema_ApiScrapeViewport = z
@@ -37,7 +37,7 @@ export const Schema_ApiScrapeViewport = z
       .min(1)
       .max(4)
       .optional()
-      .describe('Device pixel ratio (1–4, e.g. 2 for Retina)'),
+      .describe('Device pixel ratio (1–4, fractional allowed; e.g. 2 for Retina). Defaults to 1.'),
   })
   .strict()
   .describe('Custom browser viewport dimensions')

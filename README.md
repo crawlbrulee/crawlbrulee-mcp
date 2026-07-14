@@ -7,7 +7,7 @@ The official [Model Context Protocol](https://modelcontextprotocol.io) server fo
 - Stdio transport for terminal-based agents.
 - Strict, fully-described tool schemas — agents see what every parameter does without reading docs.
 
-> **Status:** v0.3.0 (beta). Tool surface is stabilizing — expect minor changes between 0.x releases.
+> **Status:** v0.4.0 (beta). Tool surface is stabilizing — expect minor changes between 0.x releases.
 
 ---
 
@@ -72,7 +72,7 @@ HTML, raw HTML, links, images, screenshot, page metadata).
 }
 ```
 
-**Output** — full scrape result. Page metadata (title, OG tags, etc.) is returned under `metadata`. Screenshots are returned as signed download URLs the agent can fetch separately. The result also carries a top-level `response_meta.usage` block:
+**Output** — full scrape result. Page metadata (title, OG tags, etc.) is returned under `metadata`. Extracted `images` are returned as absolute URLs — query strings are preserved, and relative `src`s are resolved against the page URL. Screenshots are returned as signed download URLs the agent can fetch separately; in rare cases a screenshot can't be captured, and when that happens the `screenshot` field is simply left out while the rest of your requested outputs are still returned. The result also carries a top-level `response_meta.usage` block:
 
 ```jsonc
 {
