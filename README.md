@@ -1,17 +1,25 @@
-# 🍮 crawlbrulee MCP
+# 🍮 crawlbrulee mcp
 
-The official [Model Context Protocol](https://modelcontextprotocol.io) server for the [crawlbrulee](https://crawlbrulee.com) web-scraping API. Lets MCP-aware AI agents — Claude Code, Codex, Cursor, Claude Desktop — scrape pages, map sites, and check their crawlbrulee usage as native tool calls.
+[![npm](https://img.shields.io/npm/v/@crawlbrulee/mcp?style=flat-square&label=npm)](https://www.npmjs.com/package/@crawlbrulee/mcp)
+[![license](https://img.shields.io/npm/l/@crawlbrulee/mcp?style=flat-square&label=license)](./LICENSE)
+
+the official [mcp](https://modelcontextprotocol.io) server for the [crawlbrulee](https://crawlbrulee.com) web-scraping api. lets mcp-aware ai agents — Claude Code, Codex, Cursor, Claude Desktop — scrape pages, map sites, and check their crawlbrulee usage as native tool calls.
 
 - `npx`-runnable — zero install.
-- Wraps the [`@crawlbrulee/sdk`](https://www.npmjs.com/package/@crawlbrulee/sdk) under the hood; this MCP is just a thin protocol adapter.
-- Stdio transport for terminal-based agents.
-- Strict, fully-described tool schemas — agents see what every parameter does without reading docs.
+- wraps the [`@crawlbrulee/sdk`](https://www.npmjs.com/package/@crawlbrulee/sdk) under the hood; this mcp is just a thin protocol adapter.
+- stdio transport for terminal-based agents.
+- strict, fully-described tool schemas — agents see what every parameter does without reading docs.
 
-> **Status:** v0.4.0 (beta). Tool surface is stabilizing — expect minor changes between 0.x releases.
+this readme covers the mcp server itself — its tools and how to wire it into a host. for how the api behaves — endpoints, parameters, and error semantics — please see our
+[api docs](https://crawlbrulee.com/docs).
+
+> **status:** v0.4.0 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
+
+**get a free api key** → [dashboard.crawlbrulee.com](https://dashboard.crawlbrulee.com)
 
 ---
 
-## Install
+## install
 
 ```bash
 # Claude Code
@@ -31,30 +39,31 @@ claude mcp add crawlbrulee \
 }
 ```
 
-The same pattern works for Codex, Claude Desktop, and any other host that
-accepts a stdio MCP launch command — set `command: npx`, `args: ["-y",
+the same pattern works for Codex, Claude Desktop, and any other host that
+accepts a stdio mcp launch command — set `command: npx`, `args: ["-y",
 "@crawlbrulee/mcp"]`, and forward `CRAWLBRULEE_API_KEY` via the env block.
 
-## Configuration
+## configuration
 
-| Env var               | Required | Description                                                                    |
+| env var               | required | description                                                                    |
 | --------------------- | -------- | ------------------------------------------------------------------------------ |
-| `CRAWLBRULEE_API_KEY` | yes      | API key sent as `Authorization: Bearer …`. Get one at https://crawlbrulee.com. |
+| `CRAWLBRULEE_API_KEY` | yes      | api key sent as `Authorization: Bearer …`. get one at https://crawlbrulee.com. |
 
-The MCP reads the env var on first tool invocation — not at startup — so a
+the mcp reads the env var on first tool invocation — not at startup — so a
 typo in your config surfaces as a clear tool-error message rather than the
-server failing to come up.
+server failing to come up. see
+[authentication](https://crawlbrulee.com/docs/authentication) for how the api consumes keys.
 
 ---
 
-## Tools
+## tools
 
 ### `scrape`
 
-Fetch a single URL and return the requested content (markdown, cleaned
-HTML, raw HTML, links, images, screenshot, page metadata).
+fetch a single url and return the requested content (markdown, cleaned
+html, raw html, links, images, screenshot, page metadata).
 
-**Input** — only `url` is required; everything else has sane defaults.
+**input** — only `url` is required; everything else has sane defaults.
 
 ```jsonc
 {
@@ -72,7 +81,7 @@ HTML, raw HTML, links, images, screenshot, page metadata).
 }
 ```
 
-**Output** — full scrape result. Page metadata (title, OG tags, etc.) is returned under `metadata`. Extracted `images` are returned as absolute URLs — query strings are preserved, and relative `src`s are resolved against the page URL. Screenshots are returned as signed download URLs the agent can fetch separately; in rare cases a screenshot can't be captured, and when that happens the `screenshot` field is simply left out while the rest of your requested outputs are still returned. The result also carries a top-level `response_meta.usage` block:
+**output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately; in rare cases a screenshot can't be captured, and when that happens the `screenshot` field is simply left out while the rest of your requested outputs are still returned. the result also carries a top-level `response_meta.usage` block:
 
 ```jsonc
 {
@@ -89,11 +98,15 @@ HTML, raw HTML, links, images, screenshot, page metadata).
 }
 ```
 
+alongside `response_meta.usage`, the result surfaces any non-fatal `warnings` (stable codes like `screenshot_truncated`) and, if you requested an extract that doesn't apply to the content type (e.g. `markdown` of a pdf), an `unsupported_fields` list — with the rest of the payload still returned.
+
+every input field, its default, and its constraints are documented under the [scrape endpoint](https://crawlbrulee.com/docs/scrape) — with [extraction](https://crawlbrulee.com/docs/scrape/extraction), [screenshots](https://crawlbrulee.com/docs/scrape/screenshots), [proxies & location](https://crawlbrulee.com/docs/proxies), and [caching](https://crawlbrulee.com/docs/scrape/caching) covering the individual blocks.
+
 ### `scrape_async`
 
-Submit a scrape job to run **asynchronously** and get back a `job_id` immediately, instead of holding the connection open. Use this for long-running scrapes (heavy JS rendering, full-page screenshots of long pages); for a quick one-shot fetch prefer the synchronous `scrape` tool. Then poll `scrape_status` until the job is `done` and fetch the page with `scrape_result`.
+submit a scrape job to run **asynchronously** and get back a `job_id` immediately, instead of holding the connection open. use this for long-running scrapes (heavy js rendering, full-page screenshots of long pages); for a quick one-shot fetch prefer the synchronous `scrape` tool. then poll `scrape_status` until the job is `done` and fetch the page with `scrape_result`.
 
-Takes the same input as `scrape` plus an optional per-job completion `webhook`:
+takes the same input as `scrape` plus an optional per-job completion `webhook`:
 
 ```jsonc
 {
@@ -110,13 +123,15 @@ Takes the same input as `scrape` plus an optional per-job completion `webhook`:
 }
 ```
 
-**Output** — `{ "job_id": "..." }`.
+**output** — `{ "job_id": "..." }`.
 
-When a `webhook` is attached, crawlbrulee delivers a single signed `scrape.complete` POST to your endpoint once the job reaches a terminal state, with your `metadata` echoed under `data.metadata` and the job's usage under `data.response_meta.usage` — so you can react to completion (and reconcile cost) without polling. Verify the `X-Cwbl-Signature` header with the SDK's `verifyWebhookSignature` (configure the signing secret in the dashboard under Account → Webhooks).
+when a `webhook` is attached, we deliver a single signed `scrape.complete` POST to your endpoint once the job reaches a terminal state, with your `metadata` echoed under `data.metadata` and the job's usage under `data.response_meta.usage` — so you can react to completion (and reconcile cost) without polling. verify the `X-Cwbl-Signature` header with the sdk's `verifyWebhookSignature` (configure the signing secret in the dashboard under account → webhooks).
+
+the job lifecycle is documented under [async scrape](https://crawlbrulee.com/docs/scrape/async); the delivery contract and payload shape under [webhooks](https://crawlbrulee.com/docs/scrape/webhooks), with the signature scheme in [webhook verification](https://crawlbrulee.com/docs/webhook-verification).
 
 ### `scrape_status`
 
-Look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). Once the job is `done` the response also carries a `response_meta.usage` block (`credits`, resolved `proxy` tier, `cache_hit`). Poll until `done`, then call `scrape_result`.
+look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). once the job is `done` the response also carries a `response_meta.usage` block (`credits`, resolved `proxy` tier, `cache_hit`). poll until `done`, then call `scrape_result`.
 
 ```jsonc
 { "job_id": "..." }
@@ -124,7 +139,7 @@ Look up the current lifecycle status of an async job: `pending`, `running`, `don
 
 ### `scrape_result`
 
-Fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool (including `metadata` and `response_meta.usage`). Errors if the job is still `pending`/`running`, so check `scrape_status` first.
+fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool (including `metadata` and `response_meta.usage`). errors if the job is still `pending`/`running`, so check `scrape_status` first.
 
 ```jsonc
 { "job_id": "..." }
@@ -132,7 +147,7 @@ Fetch the extracted content of a completed async job — the same result shape a
 
 ### `map`
 
-Build (or fetch a cached) link-map for a website. Combines sitemap discovery with homepage link extraction. Use this to enumerate a site before scraping selected pages. The response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`credits`, resolved `proxy` tier, `cache_hit`).
+build (or fetch a cached) link-map for a website. combines sitemap discovery with homepage link extraction. use this to enumerate a site before scraping selected pages. the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`credits`, resolved `proxy` tier, `cache_hit`).
 
 ```jsonc
 {
@@ -145,47 +160,51 @@ Build (or fetch a cached) link-map for a website. Combines sitemap discovery wit
 }
 ```
 
+see the [map endpoint](https://crawlbrulee.com/docs/map) for discovery rules and pagination semantics.
+
 ### `usage`
 
-Returns the current billing-cycle snapshot: total / used / available credits, used quota percent, max concurrency, and cycle reset timestamp. Takes no arguments.
+returns the current billing-cycle snapshot: total / used / available credits, used quota percent, max concurrency, and cycle reset timestamp. takes no arguments. what a call costs, and how credits are counted, is documented under [credits & pricing](https://crawlbrulee.com/docs/credits-and-pricing).
 
 ### `whoami`
 
-Returns the organization name, token name, and truncated token preview for the configured API key. Useful for confirming which account is in use before credit-consuming operations.
+returns the organization name, token name, and truncated token preview for the configured api key. useful for confirming which account is in use before credit-consuming operations.
 
 ---
 
-## Errors
+## errors
 
-Every tool returns an MCP error envelope (`isError: true`) when the API call fails. The error text follows a stable format:
+every tool returns an mcp error envelope (`isError: true`) when the api call fails. the error text follows a stable format:
 
 ```
 [<errorName>] <message> (HTTP <status>)
 ```
 
-Agents can branch on the `errorName` code. The set comes from the SDK's `ApiErrorName` union plus two synthetic codes added by this MCP (`missing_api_key`, `internal_error`):
+agents can branch on the `errorName` code. the set comes from the sdk's `ApiErrorName` union plus two synthetic codes added by this mcp (`missing_api_key`, `internal_error`):
 
-| Code                     | Meaning                                                                        |
+| code                     | meaning                                                                        |
 | ------------------------ | ------------------------------------------------------------------------------ |
-| `missing_api_key`        | `CRAWLBRULEE_API_KEY` is not set in the MCP host's env.                        |
-| `invalid_credentials`    | Server rejected the API key (revoked, wrong env, etc.).                        |
-| `too_many_requests`      | Rate limit hit — back off and retry.                                           |
-| `usage_allocation_error` | Plan credit / concurrency cap exceeded. Show `usage` to user.                  |
-| `validation_error`       | Input failed server validation.                                                |
-| `invalid_url`            | Target URL was rejected before fetching.                                       |
-| `blocked_url`            | Target URL is on the blocklist.                                                |
-| `antibot_blocked`        | Origin's anti-bot defenses blocked the fetch.                                  |
-| `scrape_error`           | Origin returned an error during scraping.                                      |
-| `not_found`              | Async job ID unknown (e.g. bad `job_id` to `scrape_status` / `scrape_result`). |
-| `request_timeout`        | Network / read timeout. Safe to retry.                                         |
-| `client_closed_request`  | Caller cancelled before completion.                                            |
-| `internal_server_error`  | Unhandled server-side failure.                                                 |
-| `crawlbrulee_error`      | SDK error without a typed name.                                                |
-| `internal_error`         | Bug in this MCP — please open an issue.                                        |
+| `missing_api_key`        | `CRAWLBRULEE_API_KEY` is not set in the mcp host's env.                        |
+| `invalid_credentials`    | server rejected the api key (revoked, wrong env, etc.).                        |
+| `too_many_requests`      | rate limit hit — back off and retry.                                           |
+| `usage_allocation_error` | plan credit / concurrency cap exceeded. show `usage` to user.                  |
+| `validation_error`       | input failed server validation.                                                |
+| `invalid_url`            | target url was rejected before fetching.                                       |
+| `blocked_url`            | target url is on the blocklist.                                                |
+| `antibot_blocked`        | origin's anti-bot defenses blocked the fetch.                                  |
+| `scrape_error`           | origin returned an error during scraping.                                      |
+| `not_found`              | async job ID unknown (e.g. bad `job_id` to `scrape_status` / `scrape_result`). |
+| `request_timeout`        | network / read timeout. safe to retry.                                         |
+| `client_closed_request`  | caller cancelled before completion.                                            |
+| `internal_server_error`  | unhandled server-side failure.                                                 |
+| `crawlbrulee_error`      | sdk error without a typed name.                                                |
+| `internal_error`         | bug in this mcp — please open an issue.                                        |
+
+the api docs carry the canonical [error reference](https://crawlbrulee.com/docs/errors) — every error name, what causes it, and how to recover.
 
 ---
 
-## Development
+## development
 
 ```bash
 pnpm install
@@ -196,24 +215,30 @@ pnpm build       # tsup → dist/index.js with shebang
 pnpm verify      # all of the above
 ```
 
-Run the built MCP locally:
+run the built mcp locally:
 
 ```bash
 CRAWLBRULEE_API_KEY=cwbl_... node ./dist/index.js
 ```
 
-It will block waiting for an MCP client on stdio. Combine with the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) for interactive debugging.
+it will block waiting for an mcp client on stdio. combine with the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) for interactive debugging.
 
-### Schema sync
+## docs
 
-The `src/schemas/*.ts` files are **vendored copies** of the canonical Zod schemas in `crawlbrulee/packages/shared/core/src/model/common/Api*.ts`. The ecosystem policy is that tool repos do not import the shared subtree. When the canonical schemas change:
+this readme covers the mcp server itself — installing it, wiring it into a host, and the tools it exposes. for how the api behaves — endpoints, parameters, and error semantics — the [api docs](https://crawlbrulee.com/docs) are canonical. the [mcp guide](https://crawlbrulee.com/docs/mcp) covers host setup in more depth.
 
-1. Copy the updated `Api*.ts` and supporting `ScrapeScreenshot*.ts` files into `src/schemas/`.
-2. Keep the `// VENDORED from …` banner intact and update the path if the source moved.
-3. Re-run `pnpm verify`.
+## part of the crawlbrulee toolkit
 
-A future `@crawlbrulee/types` npm package will replace this manual sync.
+one api, many ways to call it:
 
-## License
+- **[js/ts sdk](https://github.com/crawlbrulee/crawlbrulee-js)** — `@crawlbrulee/sdk` (the sdk this mcp wraps)
+- **[python sdk](https://github.com/crawlbrulee/crawlbrulee-py)** — `crawlbrulee` on pypi
+- **[cli](https://github.com/crawlbrulee/crawlbrulee-cli)** — `npx crawlbrulee`
+- **[mcp server](https://github.com/crawlbrulee/crawlbrulee-mcp)** — `@crawlbrulee/mcp` (this one)
+- **[agent skills](https://github.com/crawlbrulee/crawlbrulee-skills)** — for skills-aware coding agents
+
+docs: [crawlbrulee.com/docs](https://crawlbrulee.com/docs) · dashboard: [dashboard.crawlbrulee.com](https://dashboard.crawlbrulee.com)
+
+## license
 
 [AGPL-3.0-only](./LICENSE)

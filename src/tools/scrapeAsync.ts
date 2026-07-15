@@ -13,7 +13,7 @@ const DESCRIPTION = [
   '(heavy JS rendering, full-page screenshots of long pages) — for a quick one-shot',
   'fetch prefer the synchronous `scrape` tool, which blocks and returns the page directly.',
   'Poll the job with `scrape_status` and fetch the page with `scrape_result` once done.',
-  'Optionally attach a per-job completion `webhook`: crawlbrulee delivers a single',
+  'Optionally attach a per-job completion `webhook`: we deliver a single',
   'signed `scrape.complete` POST to your endpoint when the job finishes (HTTPS required',
   'in production), and echoes your opaque `webhook.metadata` back in the delivery',
   '(under `data.metadata`, alongside `data.response_meta.usage`).',
