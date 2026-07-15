@@ -1,6 +1,3 @@
-// VENDORED from crawlbrulee/packages/shared/core/src/model/common/ApiScrapeRequest.ts
-// Keep in sync with the canonical source on schema bumps.
-
 import { z } from 'zod'
 import {
   DEFAULT_SCRAPE_SCREENSHOT_CLEANUP,
@@ -18,13 +15,14 @@ import {
 
 export const DEFAULT_API_SCRAPE_CACHE_MAX_AGE_SECONDS = 2 * 24 * 60 * 60
 
-export const API_PROXY_TIER_VALUES = ['basic', 'advanced', 'auto', 'none'] as const
+// The supported proxy tiers.
+export const API_PROXY_TIER_VALUES = ['basic', 'advanced', 'auto'] as const
 
 export const Schema_ApiProxyType = z
   .enum(API_PROXY_TIER_VALUES)
   .default('auto')
   .describe(
-    'Proxy tier: basic, advanced, auto, or none (no proxy — non-production only). ' +
+    'Proxy tier: basic, advanced, or auto. ' +
       'Defaults to auto (automatic selection: basic tier first, escalates to advanced on failure).'
   )
 

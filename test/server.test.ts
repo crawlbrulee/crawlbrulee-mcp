@@ -227,7 +227,7 @@ describe('MCP server', () => {
       const sdkResponse = {
         url: 'https://example.com',
         metadata: { title: 'Example Domain' },
-        response_meta: { usage: { credits: 0, proxy: 'none', cache_hit: true } },
+        response_meta: { usage: { credits: 0, proxy: 'basic', cache_hit: true } },
       }
       harness.mock.getScrapeResult.mockResolvedValueOnce(sdkResponse)
 

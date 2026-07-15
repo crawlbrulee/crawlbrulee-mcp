@@ -4,6 +4,19 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.5.0 (2026-07-15)
+
+### changed
+
+- **requires `@crawlbrulee/sdk` `^0.7.0`**.
+- **the `proxy` argument on `scrape`, `scrape_async`, and `map` now accepts exactly the supported
+  tiers** — `basic`, `advanced`, `auto` (default). any value outside these was already rejected by
+  the api, so no working call changes.
+
+### fixed
+
+- the server now reports its real package version over MCP (it had drifted behind the release).
+
 ## 0.4.0 (2026-07-14)
 
 tracks a wave of server-side behavior changes. no tools were removed or renamed.
@@ -12,7 +25,7 @@ tracks a wave of server-side behavior changes. no tools were removed or renamed.
 
 - **requires `@crawlbrulee/sdk` `^0.6.0`** (built against the updated response contract).
 - **default proxy tier is now `auto`** (was `basic`) when `proxy` is omitted on `scrape`,
-  `scrape_async`, and `map`. allowed values are unchanged (`basic`, `advanced`, `auto`, `none`);
+  `scrape_async`, and `map`. allowed values are unchanged (`basic`, `advanced`, `auto`);
   `auto` starts on the basic tier and escalates to advanced on failure. the resolved tier is
   still reported back in `response_meta.usage.proxy`.
 - **custom screenshot viewport is bounded**: `width`/`height` are integers in `16–10000`, and

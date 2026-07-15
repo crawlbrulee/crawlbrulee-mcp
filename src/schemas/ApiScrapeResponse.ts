@@ -48,7 +48,7 @@ export const Schema_ApiPageLink = z.object({
 
 // Resolved proxy tier the request actually ran on. Never `auto` — the server
 // resolves `auto` to a concrete tier and reports the resolved value here.
-export const API_RESOLVED_PROXY_TIER_VALUES = ['none', 'basic', 'advanced'] as const
+export const API_RESOLVED_PROXY_TIER_VALUES = ['basic', 'advanced'] as const
 
 export const Schema_ApiUsageMeta = z.object({
   credits: z
@@ -59,7 +59,7 @@ export const Schema_ApiUsageMeta = z.object({
   proxy: z
     .enum(API_RESOLVED_PROXY_TIER_VALUES)
     .describe(
-      'The proxy tier the request actually ran on (resolved value — never `auto`; `auto` is resolved server-side to `none`, `basic`, or `advanced`).'
+      'The proxy tier the request actually ran on (resolved value — never `auto`; `auto` is resolved server-side to `basic` or `advanced`).'
     ),
   cache_hit: z
     .boolean()

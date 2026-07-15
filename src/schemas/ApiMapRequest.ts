@@ -1,6 +1,3 @@
-// VENDORED from crawlbrulee/packages/shared/core/src/model/common/ApiMapRequest.ts
-// Keep in sync with the canonical source on schema bumps.
-
 import { z } from 'zod'
 import { Schema_ApiProxyType } from './ApiScrapeRequest.js'
 
