@@ -4,6 +4,13 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.5.1 (2026-07-19)
+
+### changed
+
+- internal: the server is now built with tsdown (previously tsup) on TypeScript 6. no changes to the
+  tools, their schemas, or runtime behaviour.
+
 ## 0.5.0 (2026-07-15)
 
 ### changed
