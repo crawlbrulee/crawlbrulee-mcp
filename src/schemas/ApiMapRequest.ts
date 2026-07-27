@@ -44,7 +44,13 @@ export const Schema_ApiMapCache = z
   .describe('Cache settings for the map request')
 
 export const Schema_ApiMapRequest = z.object({
-  url: z.string().describe('The website URL to map'),
+  url: z
+    .string()
+    .describe(
+      'The website URL to map. Mapping always targets the site root, so the path, query string ' +
+        'and fragment are dropped; known tracking parameters (utm_*, mtm_*, ga_*, pk_*, gclid, ' +
+        'fbclid, msclkid, and others) are removed before the request is processed.'
+    ),
   proxy: Schema_ApiProxyType.default('auto').describe('Proxy tier to use for fetching'),
   sitemap_only: z
     .boolean()

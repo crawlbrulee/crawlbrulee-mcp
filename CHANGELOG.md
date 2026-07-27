@@ -4,6 +4,22 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.6.0 (2026-07-27)
+
+### removed
+
+- **the `cache.ignore_query_params` argument is gone** from `scrape` and `scrape_async`, because the
+  api no longer accepts it and rejects requests carrying it. `cache.max_age` is now the only cache
+  control.
+
+### changed
+
+- the `url` argument description now explains how the cache key is built: known tracking parameters
+  (`utm_*`, `mtm_*`, `ga_*`, `pk_*`, `gclid`, `fbclid`, `msclkid`, and more) are stripped before the
+  page is fetched, so they reach neither the target site nor the cache key, while every other query
+  parameter is kept verbatim. the `map` url description states that mapping always targets the site
+  root. both help an agent pick urls that actually hit the cache.
+
 ## 0.5.1 (2026-07-19)
 
 ### changed

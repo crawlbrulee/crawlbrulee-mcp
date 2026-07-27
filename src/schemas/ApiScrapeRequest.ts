@@ -73,10 +73,6 @@ export const Schema_ApiScrapeCache = z
       .union([z.number().int().nonnegative(), z.iso.datetime()])
       .default(DEFAULT_API_SCRAPE_CACHE_MAX_AGE_SECONDS)
       .describe('Maximum cache age in seconds, or an ISO 8601 datetime cutoff'),
-    ignore_query_params: z
-      .boolean()
-      .default(false)
-      .describe('Treat URLs with different query parameters as the same cache entry'),
   })
   .strict()
   .describe('Cache settings for the scrape request')
@@ -125,7 +121,14 @@ export const Schema_ApiScrapeLocation = z
 
 export const Schema_ApiScrapeRequest = z
   .object({
-    url: z.string().describe('The URL to scrape'),
+    url: z
+      .string()
+      .describe(
+        'The URL to scrape. Known tracking parameters (utm_*, mtm_*, ga_*, pk_*, gclid, fbclid, ' +
+          'msclkid, and others) are removed before the page is fetched, so they are neither sent ' +
+          'to the target site nor part of the cache key. Every other query parameter is kept ' +
+          'verbatim and is part of the cache key.'
+      ),
     extract: Schema_ApiScrapeExtract.prefault({}).describe(
       'Which content formats to extract. Defaults to metadata + cleaned_html.'
     ),
