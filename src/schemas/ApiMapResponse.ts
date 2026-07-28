@@ -40,7 +40,7 @@ export const Schema_ApiMapResult = z.object({
         'Information about whether the results were truncated'
       ),
       usage: Schema_ApiUsageMeta.describe(
-        'Usage accounting for this map request: credits charged (0 on a cache hit), the resolved proxy tier, and the cache-hit flag.'
+        'Usage accounting for this map request: credits charged (0 on a fully cached result; only parts still computed fresh are charged), the resolved proxy tier, and the cache-hit flag.'
       ),
     })
     .describe('Response metadata including pagination, truncation, and usage info'),

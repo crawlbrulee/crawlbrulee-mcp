@@ -4,6 +4,33 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.7.0 (2026-07-28)
+
+### added
+
+- **`requested_url` in the `scrape` / `scrape_result` output schemas** — the url you requested,
+  echoed verbatim, before any redirects. the `url` field description now spells out what it always
+  was: the url actually scraped, after any redirects, in cleaned canonical form (tracking params and
+  fragment removed) — the base that links, images, and internal labels are computed against.
+
+### changed
+
+- **requires `@crawlbrulee/sdk` `^0.9.0`**.
+- corrected the cache-billing descriptions: credits are `0` on a fully cached result; only parts
+  still computed fresh (e.g. a newly produced screenshot-slice variant) are charged.
+- corrected the `links` descriptions: `href` is the link as written on the page resolved to an
+  absolute url, verbatim otherwise (query string, fragment, and duplicates preserved); `internal`
+  treats www and the bare domain as equivalent, other subdomains as external.
+- documented what happens when a screenshot can't be captured: if other outputs were requested the
+  `screenshot` field is left out and the rest is returned, but a screenshot-only call errors with
+  `unsupported_screenshot_output` (HTTP 422) when the content type can't be screenshotted — and
+  isn't billed. the readme error table now carries the new code.
+
+### fixed
+
+- the server again reports its real package version over MCP (0.6.0 had drifted and reported
+  itself as 0.5.0).
+
 ## 0.6.0 (2026-07-27)
 
 ### removed

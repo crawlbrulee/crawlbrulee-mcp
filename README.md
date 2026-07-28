@@ -13,7 +13,7 @@ the official [mcp](https://modelcontextprotocol.io) server for the [crawlbrulee]
 this readme covers the mcp server itself — its tools and how to wire it into a host. for how the api behaves — endpoints, parameters, and error semantics — please see our
 [api docs](https://crawlbrulee.com/docs).
 
-> **status:** v0.5.0 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
+> **status:** v0.7.0 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
 
 **get a free api key** → [dashboard.crawlbrulee.com](https://dashboard.crawlbrulee.com)
 
@@ -81,7 +81,7 @@ html, raw html, links, images, screenshot, page metadata).
 }
 ```
 
-**output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately; in rare cases a screenshot can't be captured, and when that happens the `screenshot` field is simply left out while the rest of your requested outputs are still returned. the result also carries a top-level `response_meta.usage` block:
+**output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is simply left out while the rest is still returned — but a screenshot-only call that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. the result also carries a top-level `response_meta.usage` block:
 
 ```jsonc
 {
@@ -90,7 +90,7 @@ html, raw html, links, images, screenshot, page metadata).
   "metadata": { "title": "Example Domain" },
   "response_meta": {
     "usage": {
-      "credits": 1, // credits charged — 0 on a cache hit
+      "credits": 1, // 0 on a fully cached result — only parts still computed fresh are charged
       "proxy": "basic", // resolved tier actually used: "basic" | "advanced" (never "auto")
       "cache_hit": false, // whether the result was served from cache
     },
@@ -182,23 +182,24 @@ every tool returns an mcp error envelope (`isError: true`) when the api call fai
 
 agents can branch on the `errorName` code. the set comes from the sdk's `ApiErrorName` union plus two synthetic codes added by this mcp (`missing_api_key`, `internal_error`):
 
-| code                     | meaning                                                                        |
-| ------------------------ | ------------------------------------------------------------------------------ |
-| `missing_api_key`        | `CRAWLBRULEE_API_KEY` is not set in the mcp host's env.                        |
-| `invalid_credentials`    | server rejected the api key (revoked, wrong env, etc.).                        |
-| `too_many_requests`      | rate limit hit — back off and retry.                                           |
-| `usage_allocation_error` | plan credit / concurrency cap exceeded. show `usage` to user.                  |
-| `validation_error`       | input failed server validation.                                                |
-| `invalid_url`            | target url was rejected before fetching.                                       |
-| `blocked_url`            | target url is on the blocklist.                                                |
-| `antibot_blocked`        | origin's anti-bot defenses blocked the fetch.                                  |
-| `scrape_error`           | origin returned an error during scraping.                                      |
-| `not_found`              | async job ID unknown (e.g. bad `job_id` to `scrape_status` / `scrape_result`). |
-| `request_timeout`        | network / read timeout. safe to retry.                                         |
-| `client_closed_request`  | caller cancelled before completion.                                            |
-| `internal_server_error`  | unhandled server-side failure.                                                 |
-| `crawlbrulee_error`      | sdk error without a typed name.                                                |
-| `internal_error`         | bug in this mcp — please open an issue.                                        |
+| code                            | meaning                                                                                       |
+| ------------------------------- | --------------------------------------------------------------------------------------------- |
+| `missing_api_key`               | `CRAWLBRULEE_API_KEY` is not set in the mcp host's env.                                       |
+| `invalid_credentials`           | server rejected the api key (revoked, wrong env, etc.).                                       |
+| `too_many_requests`             | rate limit hit — back off and retry.                                                          |
+| `usage_allocation_error`        | plan credit / concurrency cap exceeded. show `usage` to user.                                 |
+| `validation_error`              | input failed server validation.                                                               |
+| `invalid_url`                   | target url was rejected before fetching.                                                      |
+| `blocked_url`                   | target url is on the blocklist.                                                               |
+| `antibot_blocked`               | origin's anti-bot defenses blocked the fetch.                                                 |
+| `scrape_error`                  | origin returned an error during scraping.                                                     |
+| `unsupported_screenshot_output` | screenshot-only request on a content type that can't be screenshotted (HTTP 422). not billed. |
+| `not_found`                     | async job ID unknown (e.g. bad `job_id` to `scrape_status` / `scrape_result`).                |
+| `request_timeout`               | network / read timeout. safe to retry.                                                        |
+| `client_closed_request`         | caller cancelled before completion.                                                           |
+| `internal_server_error`         | unhandled server-side failure.                                                                |
+| `crawlbrulee_error`             | sdk error without a typed name.                                                               |
+| `internal_error`                | bug in this mcp — please open an issue.                                                       |
 
 the api docs carry the canonical [error reference](https://crawlbrulee.com/docs/errors) — every error name, what causes it, and how to recover.
 

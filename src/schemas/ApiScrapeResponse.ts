@@ -42,8 +42,16 @@ export const Schema_ApiPageInlineImgItem = z.object({
 
 export const Schema_ApiPageLink = z.object({
   text: z.string().describe('Anchor text of the link'),
-  href: z.string().describe('The link URL as it appears on the page (absolute or relative)'),
-  internal: z.boolean().describe('Whether the link points to the same domain'),
+  href: z
+    .string()
+    .describe(
+      'The link URL as written on the page, resolved to an absolute URL; verbatim otherwise (query string, fragment, and duplicates preserved)'
+    ),
+  internal: z
+    .boolean()
+    .describe(
+      'Whether the link points to the same domain (www and the bare domain are equivalent; other subdomains are external)'
+    ),
 })
 
 // Resolved proxy tier the request actually ran on. Never `auto` — the server
@@ -55,7 +63,9 @@ export const Schema_ApiUsageMeta = z.object({
     .number()
     .int()
     .nonnegative()
-    .describe('Credits charged for this request. `0` on a cache hit (no fresh fetch was billed).'),
+    .describe(
+      'Credits charged for this request. `0` on a fully cached result; only parts still computed fresh (e.g. a newly produced screenshot-slice variant) are charged.'
+    ),
   proxy: z
     .enum(API_RESOLVED_PROXY_TIER_VALUES)
     .describe(
@@ -101,7 +111,14 @@ export const Schema_ApiScrapeMeta = z.object({
 })
 
 export const Schema_ApiScrapeSuccessResponse = z.object({
-  url: z.string().describe('The URL that was scraped (after any redirects)'),
+  url: z
+    .string()
+    .describe(
+      'The URL that was actually scraped, after any redirects, in cleaned canonical form (tracking params and fragment removed) — the base that links, images, and internal labels are computed against'
+    ),
+  requested_url: z
+    .string()
+    .describe('The URL you requested, echoed verbatim — before any redirects'),
   content_type: z.string().optional().describe('Content-Type header returned by the server'),
   unsupported_fields: z
     .array(z.string())
@@ -128,7 +145,7 @@ export const Schema_ApiScrapeSuccessResponse = z.object({
       'Non-error notices about the scrape (e.g. `screenshot_truncated` when a long page exceeded the scrolling-screenshot height cap). Stable string codes — clients can switch on them. Currently surfaced only on fresh scrapes; cache hits omit warnings.'
     ),
   response_meta: Schema_ApiResponseMeta.describe(
-    'Request-level metadata. `response_meta.usage` reports credits charged (0 on a cache hit), the resolved proxy tier, and the cache-hit flag.'
+    'Request-level metadata. `response_meta.usage` reports credits charged (0 on a fully cached result; only parts still computed fresh are charged), the resolved proxy tier, and the cache-hit flag.'
   ),
 })
 

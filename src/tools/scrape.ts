@@ -11,8 +11,9 @@ const DESCRIPTION = [
   '(markdown, cleaned HTML, raw HTML, links, images, screenshot, page metadata in `metadata`).',
   'Use this for one-shot page extraction. For full-site discovery use the `map` tool first.',
   'Screenshot URLs in the response are signed download links — the agent can fetch them when needed.',
-  'The response also carries `response_meta.usage` = { credits (0 on a cache hit), proxy (the resolved',
-  'tier — never `auto`), cache_hit } so you can see what the request cost.',
+  'The response also carries `response_meta.usage` = { credits (0 on a fully cached result; only',
+  'parts still computed fresh are charged), proxy (the resolved tier — never `auto`), cache_hit }',
+  'so you can see what the request cost.',
 ].join(' ')
 
 export function registerScrapeTool(server: McpServer, getClient: CrawlbruleeClientFactory): void {

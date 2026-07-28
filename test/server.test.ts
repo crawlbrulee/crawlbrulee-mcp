@@ -86,6 +86,7 @@ describe('MCP server', () => {
     it('forwards the request body to the SDK and returns the structured response', async () => {
       const sdkResponse = {
         url: 'https://example.com',
+        requested_url: 'https://example.com/?utm_source=test',
         metadata: { title: 'Example Domain' },
         response_meta: { usage: { credits: 1, proxy: 'basic', cache_hit: false } },
       }
@@ -226,6 +227,7 @@ describe('MCP server', () => {
     it('calls getScrapeResult with the job_id and returns the scrape result', async () => {
       const sdkResponse = {
         url: 'https://example.com',
+        requested_url: 'https://example.com',
         metadata: { title: 'Example Domain' },
         response_meta: { usage: { credits: 0, proxy: 'basic', cache_hit: true } },
       }
