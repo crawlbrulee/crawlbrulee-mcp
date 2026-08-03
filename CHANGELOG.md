@@ -4,6 +4,16 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.7.1 (2026-08-03)
+
+### changed
+
+- **requires `@crawlbrulee/sdk` `^0.10.0`**, which drops `overage_hard_cap` from
+  `UsageAllocationReason`. the api now reports every credit-exhaustion refusal as
+  `credit_limit`. no tool output or input schema changes — this server never surfaced the
+  reason code directly, so the bump is here to keep the sdk floor current rather than to
+  change behaviour.
+
 ## 0.7.0 (2026-07-28)
 
 ### added
