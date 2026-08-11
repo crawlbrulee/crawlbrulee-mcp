@@ -4,6 +4,16 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## Unreleased
+
+### changed
+
+- **`device_scale_factor` max lowered `4` → `3`** in the scrape tool's input schema,
+  matching the api (the backend now rejects `dsf > 3` with a `400` — raster memory
+  scales with dsf² and `4` cost 16× the dsf-1 pixels for no machine-reading gain).
+  `device_scale_factor: 4` now fails local validation inside the MCP server instead
+  of reaching the api.
+
 ## 0.7.1 (2026-08-03)
 
 ### changed

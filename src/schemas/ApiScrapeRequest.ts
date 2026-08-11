@@ -33,9 +33,9 @@ export const Schema_ApiScrapeViewport = z
     device_scale_factor: z
       .number()
       .min(1)
-      .max(4)
+      .max(3)
       .optional()
-      .describe('Device pixel ratio (1–4, fractional allowed; e.g. 2 for Retina). Defaults to 1.'),
+      .describe('Device pixel ratio (1–3, fractional allowed; e.g. 2 for Retina). Defaults to 1.'),
   })
   .strict()
   .describe('Custom browser viewport dimensions')
