@@ -142,7 +142,7 @@ export const Schema_ApiScrapeSuccessResponse = z.object({
     .array(z.string())
     .optional()
     .describe(
-      'Non-error notices about the scrape, e.g. `screenshot_truncated` when a long page exceeded the scrolling-screenshot height cap, `links_truncated` / `inline_images_truncated` when a page had more links/images than the per-page extraction caps, or `raw_html_truncated` / `metadata_truncated` when the rendered HTML exceeded the per-page size budget. Stable string codes — clients can switch on them. Currently surfaced only on fresh scrapes; cache hits omit warnings.'
+      'Non-error notices about the scrape. Truncation codes — `screenshot_truncated` (long page exceeded the scrolling-screenshot height cap), `links_truncated` / `inline_images_truncated` (page had more links/images than the per-page extraction caps), `raw_html_truncated` / `metadata_truncated` (rendered HTML exceeded the per-page size budget) — mean the field is present but capped. Unavailability codes — `links_unavailable` / `inline_images_unavailable` / `metadata_unavailable` — mean that optional field could not be extracted and was omitted (null/empty) while the rest of the scrape succeeded, so an empty field carrying one of these does NOT mean the page had none. Stable string codes — clients can switch on them. Warnings are stored with the result: async result fetches and cache hits carry them too, filtered to the fields the request asked for.'
     ),
   response_meta: Schema_ApiResponseMeta.describe(
     'Request-level metadata. `response_meta.usage` reports credits charged (0 on a fully cached result; only parts still computed fresh are charged), the resolved proxy tier, and the cache-hit flag.'

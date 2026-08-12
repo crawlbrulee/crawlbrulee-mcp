@@ -24,6 +24,16 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
   html. past a cap the output is truncated (never silently) and the matching
   `*_truncated` warning is returned. the `scrape` tool description says the same, so the
   limits are visible before the call as well as after it.
+- **the `warnings` description now covers the `*_unavailable` codes** —
+  `links_unavailable`, `inline_images_unavailable`, `metadata_unavailable` — which say that
+  section's extraction failed and the field came back omitted or empty while the rest of
+  the scrape succeeded. this matters more for an agent than for a human caller: an empty
+  `links` array reads as "this page has no links" and gets reported as a finding, so both
+  the tool description and the output schema now say explicitly that an empty field
+  carrying one of these codes is unread, not absent, and the call should be retried.
+- **the `warnings` description no longer claims cache hits omit warnings.** they are stored
+  with the result now, so `scrape_result` fetches and cache hits carry the same codes,
+  filtered to the fields the request asked for.
 
 ### docs
 

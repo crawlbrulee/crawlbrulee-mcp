@@ -18,6 +18,10 @@ const DESCRIPTION = [
   'HTML and 2,000,000 characters of head HTML. A page past a cap is truncated rather than refused,',
   'and the response `warnings` array names which one (`links_truncated`, `inline_images_truncated`,',
   '`raw_html_truncated`, `metadata_truncated`) — so treat that output as incomplete.',
+  '`warnings` also reports a section whose extraction failed outright (`links_unavailable`,',
+  '`inline_images_unavailable`, `metadata_unavailable`): that field comes back omitted or empty',
+  'while the rest of the scrape succeeded, so do NOT conclude the page had no links/images/metadata',
+  '— re-run the scrape instead. An empty field with no such warning does mean the page had none.',
 ].join(' ')
 
 export function registerScrapeTool(server: McpServer, getClient: CrawlbruleeClientFactory): void {
