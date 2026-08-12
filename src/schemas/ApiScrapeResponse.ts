@@ -142,7 +142,7 @@ export const Schema_ApiScrapeSuccessResponse = z.object({
     .array(z.string())
     .optional()
     .describe(
-      'Non-error notices about the scrape (e.g. `screenshot_truncated` when a long page exceeded the scrolling-screenshot height cap). Stable string codes — clients can switch on them. Currently surfaced only on fresh scrapes; cache hits omit warnings.'
+      'Non-error notices about the scrape, e.g. `screenshot_truncated` when a long page exceeded the scrolling-screenshot height cap, `links_truncated` / `inline_images_truncated` when a page had more links/images than the per-page extraction caps, or `raw_html_truncated` / `metadata_truncated` when the rendered HTML exceeded the per-page size budget. Stable string codes — clients can switch on them. Currently surfaced only on fresh scrapes; cache hits omit warnings.'
     ),
   response_meta: Schema_ApiResponseMeta.describe(
     'Request-level metadata. `response_meta.usage` reports credits charged (0 on a fully cached result; only parts still computed fresh are charged), the resolved proxy tier, and the cache-hit flag.'

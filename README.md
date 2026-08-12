@@ -13,7 +13,7 @@ the official [mcp](https://modelcontextprotocol.io) server for the [crawlbrulee]
 this readme covers the mcp server itself — its tools and how to wire it into a host. for how the api behaves — endpoints, parameters, and error semantics — please see our
 [api docs](https://crawlbrulee.com/docs).
 
-> **status:** v0.7.0 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
+> **status:** v0.7.1 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
 
 **get a free api key** → [dashboard.crawlbrulee.com](https://dashboard.crawlbrulee.com)
 
@@ -98,7 +98,17 @@ html, raw html, links, images, screenshot, page metadata).
 }
 ```
 
-alongside `response_meta.usage`, the result surfaces any non-fatal `warnings` (stable codes like `screenshot_truncated`) and, if you requested an extract that doesn't apply to the content type (e.g. `markdown` of a pdf), an `unsupported_fields` list — with the rest of the payload still returned.
+alongside `response_meta.usage`, the result surfaces any non-fatal `warnings` — stable string codes an agent can switch on. an outsized page is truncated rather than refused, and the code names which part was cut:
+
+| code                      | what it means for the payload                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `screenshot_truncated`    | the page was taller than the scrolling-capture height cap; the screenshot covers the top of the page. |
+| `links_truncated`         | the page had more than 30,000 links; the `links` array is cut at the cap and is incomplete.           |
+| `inline_images_truncated` | the page had more than 10,000 inline images; the `images` array is cut at the cap and is incomplete.  |
+| `raw_html_truncated`      | the page body exceeded 10,000,000 characters; `raw_html` is cut at a tag boundary, never mid-tag.     |
+| `metadata_truncated`      | the page head exceeded 2,000,000 characters; `metadata` can be missing tags that sat past the cut.    |
+
+and if you requested an extract that doesn't apply to the content type (e.g. `markdown` of a pdf), the field name comes back in an `unsupported_fields` list — with the rest of the payload still returned.
 
 every input field, its default, and its constraints are documented under the [scrape endpoint](https://crawlbrulee.com/docs/scrape) — with [extraction](https://crawlbrulee.com/docs/scrape/extraction), [screenshots](https://crawlbrulee.com/docs/scrape/screenshots), [proxies & location](https://crawlbrulee.com/docs/proxies), and [caching](https://crawlbrulee.com/docs/scrape/caching) covering the individual blocks.
 
@@ -186,6 +196,7 @@ agents can branch on the `errorName` code. the set comes from the sdk's `ApiErro
 | ------------------------------- | --------------------------------------------------------------------------------------------- |
 | `missing_api_key`               | `CRAWLBRULEE_API_KEY` is not set in the mcp host's env.                                       |
 | `invalid_credentials`           | server rejected the api key (revoked, wrong env, etc.).                                       |
+| `service_unavailable`           | temporary backend failure (HTTP 503). your key is fine — retry with backoff.                  |
 | `too_many_requests`             | rate limit hit — back off and retry.                                                          |
 | `usage_allocation_error`        | plan credit / concurrency cap exceeded. show `usage` to user.                                 |
 | `validation_error`              | input failed server validation.                                                               |

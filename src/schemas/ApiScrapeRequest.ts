@@ -82,12 +82,29 @@ export const Schema_ApiScrapeExtract = z
     metadata: z
       .boolean()
       .default(true)
-      .describe('Extract page metadata (title, description, OG tags, etc.)'),
+      .describe(
+        'Extract page metadata (title, description, OG tags, etc.). Read from the page head, which is capped at 2,000,000 characters — a larger head is truncated and the response carries a `metadata_truncated` warning.'
+      ),
     cleaned_html: z.boolean().default(true).describe('Extract cleaned HTML (main content only)'),
     markdown: z.boolean().default(false).describe('Extract page content as clean Markdown'),
-    raw_html: z.boolean().default(false).describe('Return the raw, unprocessed HTML'),
-    links: z.boolean().default(false).describe('Extract all links found on the page'),
-    images: z.boolean().default(false).describe('Extract all inline images found on the page'),
+    raw_html: z
+      .boolean()
+      .default(false)
+      .describe(
+        'Return the raw, unprocessed HTML, up to 10,000,000 characters of page body. A larger body is truncated at a tag boundary and the response carries a `raw_html_truncated` warning.'
+      ),
+    links: z
+      .boolean()
+      .default(false)
+      .describe(
+        'Extract links found on the page, up to 30,000 per page. Beyond that the array is truncated and the response carries a `links_truncated` warning.'
+      ),
+    images: z
+      .boolean()
+      .default(false)
+      .describe(
+        'Extract inline images found on the page, up to 10,000 per page. Beyond that the array is truncated and the response carries an `inline_images_truncated` warning.'
+      ),
     screenshot: Schema_ApiScrapeFormatScreenshot.optional().describe(
       'Capture a screenshot of the page'
     ),

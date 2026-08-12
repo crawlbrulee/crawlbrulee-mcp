@@ -52,8 +52,9 @@ const MISSING_API_KEY_REMEDIATION =
 /**
  * Map any thrown value into the MCP tool-error envelope. SDK errors carry
  * stable `errorName` codes and HTTP `status`; both go into the surfaced
- * message so the calling agent can branch on them (e.g. retry on
- * `rate_limited`, prompt the user on `invalid_credentials`).
+ * message so the calling agent can branch on them (e.g. back off and retry on
+ * `too_many_requests` or `service_unavailable` — a transient backend failure,
+ * not a bad key — and prompt the user on `invalid_credentials`).
  *
  * One special case: the SDK throws a generic `CrawlbruleeError` (status 0,
  * errorName null) when `CRAWLBRULEE_API_KEY` is missing. We rewrite that

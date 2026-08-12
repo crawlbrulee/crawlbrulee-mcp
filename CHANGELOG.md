@@ -13,6 +13,27 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
   scales with dsf² and `4` cost 16× the dsf-1 pixels for no machine-reading gain).
   `device_scale_factor: 4` now fails local validation inside the MCP server instead
   of reaching the api.
+- **the `warnings` output description now names every code an agent can see** —
+  `screenshot_truncated`, `links_truncated`, `inline_images_truncated`,
+  `raw_html_truncated`, `metadata_truncated` — instead of `screenshot_truncated` alone.
+  the description ships to the model as part of the `scrape` / `scrape_result` output
+  schema, so an agent can now tell truncated output from complete output without a doc
+  lookup. no schema shape change: `warnings` is still an optional array of strings.
+- **the `extract` argument descriptions carry the per-page caps**: 30,000 links,
+  10,000 inline images, 10,000,000 characters of body html, 2,000,000 characters of head
+  html. past a cap the output is truncated (never silently) and the matching
+  `*_truncated` warning is returned. the `scrape` tool description says the same, so the
+  limits are visible before the call as well as after it.
+
+### docs
+
+- the readme's warnings section enumerates all five codes and what each one means for the
+  payload, and the error table gains `service_unavailable` — a temporary backend failure
+  (HTTP 503) that says nothing about your key, so retry it with backoff rather than
+  rotating credentials. the error-mapping guidance in the code now names
+  `too_many_requests` (the real rate-limit code) and `service_unavailable` as the
+  retryable pair.
+- the readme status line reports the current version again (it still said `v0.7.0`).
 
 ## 0.7.1 (2026-08-03)
 

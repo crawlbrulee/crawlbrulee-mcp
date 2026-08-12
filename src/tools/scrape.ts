@@ -14,6 +14,10 @@ const DESCRIPTION = [
   'The response also carries `response_meta.usage` = { credits (0 on a fully cached result; only',
   'parts still computed fresh are charged), proxy (the resolved tier — never `auto`), cache_hit }',
   'so you can see what the request cost.',
+  'Extraction is capped per page: 30,000 links, 10,000 inline images, 10,000,000 characters of body',
+  'HTML and 2,000,000 characters of head HTML. A page past a cap is truncated rather than refused,',
+  'and the response `warnings` array names which one (`links_truncated`, `inline_images_truncated`,',
+  '`raw_html_truncated`, `metadata_truncated`) — so treat that output as incomplete.',
 ].join(' ')
 
 export function registerScrapeTool(server: McpServer, getClient: CrawlbruleeClientFactory): void {
