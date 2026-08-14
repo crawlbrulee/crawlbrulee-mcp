@@ -4,7 +4,7 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
-## Unreleased
+## 0.8.0 (2026-08-14)
 
 ### changed
 
@@ -34,6 +34,10 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 - **the `warnings` description no longer claims cache hits omit warnings.** they are stored
   with the result now, so `scrape_result` fetches and cache hits carry the same codes,
   filtered to the fields the request asked for.
+- **`@crawlbrulee/sdk` moved to `^0.11.0`** (from `^0.10.0`), picking up
+  `ServiceUnavailableError` and the `ScrapeWarningCode` union. a `^` range on a `0.x`
+  dependency pins the minor, so this had to move by hand for the server to run against
+  the sdk release that carries the codes described above.
 
 ### docs
 
