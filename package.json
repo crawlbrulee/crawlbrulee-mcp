@@ -1,6 +1,6 @@
 {
   "name": "@crawlbrulee/mcp",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Official MCP server for the crawlbrulee API — scrape and map URLs from MCP-aware agents (Claude Code, Codex, Cursor).",
   "keywords": [
     "crawlbrulee",
@@ -55,7 +55,7 @@
     "prepublishOnly": "pnpm verify"
   },
   "dependencies": {
-    "@crawlbrulee/sdk": "^0.11.0",
+    "@crawlbrulee/sdk": "^0.11.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^4.0.0"
   },

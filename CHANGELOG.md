@@ -4,6 +4,19 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.8.1 (2026-08-17)
+
+### fixed
+
+- **the MCP initialize handshake reports the current package version again.** the published
+  0.8.0 package still announced itself as 0.7.0. a version-lockstep test now guards the
+  package metadata and handshake version.
+
+### changed
+
+- **`@crawlbrulee/sdk` moved to `^0.11.1`**, carrying the improved advanced proxy tier
+  documentation. no MCP tool input, output, or behavior changed.
+
 ## 0.8.0 (2026-08-14)
 
 ### changed
