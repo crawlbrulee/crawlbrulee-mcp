@@ -1,4 +1,4 @@
-// VENDORED from crawlbrulee/packages/shared/core/src/model/common/ApiWhoamiResponse.ts
+// VENDORED from crawlbrulee/packages/core/src/model/common/ApiWhoamiResponse.ts
 // Keep in sync with the canonical source on schema bumps.
 
 import { z } from 'zod'

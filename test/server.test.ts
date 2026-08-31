@@ -88,7 +88,9 @@ describe('MCP server', () => {
         url: 'https://example.com',
         requested_url: 'https://example.com/?utm_source=test',
         metadata: { title: 'Example Domain' },
-        response_meta: { usage: { credits: 1, proxy: 'basic', cache_hit: false } },
+        response_meta: {
+          usage: { credits: 1, engine: 'text', proxy: 'basic', screenshot_slices: 0 },
+        },
       }
       harness.mock.scrape.mockResolvedValueOnce(sdkResponse)
 
@@ -209,7 +211,9 @@ describe('MCP server', () => {
         job_id: 'job_123',
         status: 'done',
         created_at: '2026-06-13T00:00:00.000Z',
-        response_meta: { usage: { credits: 2, proxy: 'advanced', cache_hit: false } },
+        response_meta: {
+          usage: { credits: 5, engine: 'text', proxy: 'advanced', screenshot_slices: 0 },
+        },
       }
       harness.mock.getScrapeStatus.mockResolvedValueOnce(status)
 
@@ -229,7 +233,9 @@ describe('MCP server', () => {
         url: 'https://example.com',
         requested_url: 'https://example.com',
         metadata: { title: 'Example Domain' },
-        response_meta: { usage: { credits: 0, proxy: 'basic', cache_hit: true } },
+        response_meta: {
+          usage: { credits: 0, engine: 'cache', proxy: 'basic', screenshot_slices: 0 },
+        },
       }
       harness.mock.getScrapeResult.mockResolvedValueOnce(sdkResponse)
 
@@ -263,7 +269,7 @@ describe('MCP server', () => {
             total_before_max_urls: 2,
             total_detected_before_storage_cap: 2,
           },
-          usage: { credits: 1, proxy: 'basic', cache_hit: false },
+          usage: { credits: 1, engine: 'text', proxy: 'basic', screenshot_slices: 0 },
         },
       }
       harness.mock.map.mockResolvedValueOnce(sdkResponse)

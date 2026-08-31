@@ -1,4 +1,4 @@
-// VENDORED from crawlbrulee/packages/shared/core/src/model/common/ApiScrapeResponse.ts
+// VENDORED from crawlbrulee/packages/core/src/model/common/ApiUsage.ts + ApiScrapeResponse.ts
 // Keep in sync with the canonical source on schema bumps.
 //
 // Response shapes for the async scrape lifecycle: submit (job_id), status, and
@@ -34,7 +34,7 @@ export const Schema_ApiScrapeStatusResponse = z.object({
   error: z.string().optional().describe('Error message if the job ended in `failed`'),
   response_meta: Schema_ApiResponseMeta.optional().describe(
     'Usage accounting for the finished job. Present only once the job is `done`; ' +
-      '`response_meta.usage` reports credits charged (0 on a fully cached result; only parts still computed fresh are charged), the resolved proxy tier, and the cache-hit flag.'
+      '`response_meta.usage` reports credits charged, the billed engine, the resolved proxy tier, and any screenshot-slice add-on.'
   ),
 })
 

@@ -11,7 +11,8 @@ import type { ApiScrapeStatusResponse, AsyncJobId } from '../schemas/index.js'
 const DESCRIPTION = [
   'Look up the current lifecycle status of an async scrape job submitted via `scrape_async`.',
   'Returns the job state (`pending`, `running`, `done`, `failed`), with an `error` message',
-  'when it failed and a `response_meta.usage` block (credits, resolved proxy tier, cache_hit) once it is',
+  'when it failed and a `response_meta.usage` block (credits, billed engine, resolved proxy tier,',
+  'screenshot_slices) once it is',
   '`done`. Poll this until the status is `done`, then call `scrape_result` to fetch',
   'the page. If you registered a completion webhook on submit you can skip polling and react',
   'to the delivery instead.',

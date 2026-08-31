@@ -1,4 +1,4 @@
-// VENDORED from crawlbrulee/packages/shared/core/src/model/common/ApiScrapeRequest.ts
+// VENDORED from crawlbrulee/packages/core/src/model/common/ApiScrapeRequest.ts
 // Keep in sync with the canonical source on schema bumps.
 //
 // The async submit body is the synchronous scrape request plus an optional

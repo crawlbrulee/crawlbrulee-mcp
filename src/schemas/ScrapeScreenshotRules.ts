@@ -1,4 +1,4 @@
-// VENDORED from crawlbrulee/packages/shared/core/src/model/common/ScrapeScreenshotRules.ts
+// VENDORED from crawlbrulee/packages/core/src/model/common/ScrapeScreenshotRules.ts
 // Keep in sync with the canonical source on schema bumps. Trimmed to the
 // pieces consumed by the vendored Zod schemas — runtime helpers used only by
 // the server are intentionally left out.

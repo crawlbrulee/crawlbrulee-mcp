@@ -90,9 +90,10 @@ html, raw html, links, images, screenshot, page metadata).
   "metadata": { "title": "Example Domain" },
   "response_meta": {
     "usage": {
-      "credits": 1, // 0 on a fully cached result — only parts still computed fresh are charged
+      "credits": 1,
+      "engine": "text", // "text" | "browser" | "screenshot" | "cache"
       "proxy": "basic", // resolved tier actually used: "basic" | "advanced" (never "auto")
-      "cache_hit": false, // whether the result was served from cache
+      "screenshot_slices": 0, // 1 when the screenshot-split add-on was billed, otherwise 0
     },
   },
 }
@@ -141,7 +142,7 @@ the job lifecycle is documented under [async scrape](https://crawlbrulee.com/doc
 
 ### `scrape_status`
 
-look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). once the job is `done` the response also carries a `response_meta.usage` block (`credits`, resolved `proxy` tier, `cache_hit`). poll until `done`, then call `scrape_result`.
+look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). once the job is `done` the response also carries a `response_meta.usage` block (`credits`, billed `engine`, resolved `proxy` tier, `screenshot_slices`). a cache hit is represented by `engine: "cache"`. poll until `done`, then call `scrape_result`.
 
 ```jsonc
 { "job_id": "..." }
@@ -157,7 +158,7 @@ fetch the extracted content of a completed async job — the same result shape a
 
 ### `map`
 
-build (or fetch a cached) link-map for a website. combines sitemap discovery with homepage link extraction. use this to enumerate a site before scraping selected pages. the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`credits`, resolved `proxy` tier, `cache_hit`).
+build (or fetch a cached) link-map for a website. combines sitemap discovery with homepage link extraction. use this to enumerate a site before scraping selected pages. the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`credits`, billed `engine`, resolved `proxy` tier, `screenshot_slices`).
 
 ```jsonc
 {

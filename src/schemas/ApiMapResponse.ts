@@ -1,4 +1,4 @@
-// VENDORED from crawlbrulee/packages/shared/core/src/model/common/ApiMapResponse.ts
+// VENDORED from crawlbrulee/packages/core/src/model/common/ApiMapResponse.ts
 // Keep in sync with the canonical source on schema bumps.
 
 import { z } from 'zod'
@@ -40,7 +40,7 @@ export const Schema_ApiMapResult = z.object({
         'Information about whether the results were truncated'
       ),
       usage: Schema_ApiUsageMeta.describe(
-        'Usage accounting for this map request: credits charged (0 on a fully cached result; only parts still computed fresh are charged), the resolved proxy tier, and the cache-hit flag.'
+        'Usage accounting for this map request: credits charged, the billed engine, the resolved proxy tier, and any screenshot-slice add-on.'
       ),
     })
     .describe('Response metadata including pagination, truncation, and usage info'),

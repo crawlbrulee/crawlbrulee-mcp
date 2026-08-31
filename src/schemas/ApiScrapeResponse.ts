@@ -1,4 +1,4 @@
-// VENDORED from crawlbrulee/packages/shared/core/src/model/common/ApiScrapeResponse.ts
+// VENDORED from crawlbrulee/packages/core/src/model/common/ApiUsage.ts + ApiScrapeResponse.ts
 // Keep in sync with the canonical source on schema bumps.
 
 import { z } from 'zod'
@@ -64,21 +64,30 @@ export const Schema_ApiUsageMeta = z.object({
     .int()
     .nonnegative()
     .describe(
-      'Credits charged for this request. `0` on a fully cached result; only parts still computed fresh (e.g. a newly produced screenshot-slice variant) are charged.'
+      'Credits actually charged for this request. Always equals the engine base × the proxy multiplier, plus screenshot_slices. A cache hit has engine "cache" (base 0), so it costs only the parts we still had to compute — a newly produced screenshot-slice variant — and is otherwise free.'
+    ),
+  engine: z
+    .enum(['text', 'browser', 'screenshot', 'cache'])
+    .describe(
+      'The engine base the request was billed at — "text" (1 credit), "browser" (3), "screenshot" (5), or "cache" (0, the result was served from cache) — before the proxy multiplier. Reflects what was delivered, never what was requested.'
     ),
   proxy: z
     .enum(API_RESOLVED_PROXY_TIER_VALUES)
     .describe(
       'The proxy tier the request actually ran on (resolved value — never `auto`; `auto` is resolved server-side to `basic` or `advanced`).'
     ),
-  cache_hit: z
-    .boolean()
-    .describe('Whether the result was served from cache (`true`) or freshly fetched (`false`).'),
+  screenshot_slices: z
+    .number()
+    .int()
+    .nonnegative()
+    .describe(
+      'Whether this request was billed the screenshot-split add-on: 1 when the screenshot was split on this request (a flat +1 credit outside the proxy multiplier, regardless of how many slices the split produced), else 0 — including a cache hit that reused an already-existing slice variant.'
+    ),
 })
 
 export const Schema_ApiResponseMeta = z.object({
   usage: Schema_ApiUsageMeta.describe(
-    'Usage accounting for this request: credits charged, resolved proxy tier, and cache-hit flag.'
+    'Usage accounting for this request: credits charged, billed engine, resolved proxy tier, and screenshot-slice add-on.'
   ),
 })
 
@@ -145,7 +154,7 @@ export const Schema_ApiScrapeSuccessResponse = z.object({
       'Non-error notices about the scrape. Truncation codes — `screenshot_truncated` (long page exceeded the scrolling-screenshot height cap), `links_truncated` / `inline_images_truncated` (page had more links/images than the per-page extraction caps), `raw_html_truncated` / `metadata_truncated` (rendered HTML exceeded the per-page size budget) — mean the field is present but capped. Unavailability codes — `links_unavailable` / `inline_images_unavailable` / `metadata_unavailable` — mean that optional field could not be extracted and was omitted (null/empty) while the rest of the scrape succeeded, so an empty field carrying one of these does NOT mean the page had none. Stable string codes — clients can switch on them. Warnings are stored with the result: async result fetches and cache hits carry them too, filtered to the fields the request asked for.'
     ),
   response_meta: Schema_ApiResponseMeta.describe(
-    'Request-level metadata. `response_meta.usage` reports credits charged (0 on a fully cached result; only parts still computed fresh are charged), the resolved proxy tier, and the cache-hit flag.'
+    'Request-level metadata. `response_meta.usage` reports credits charged, the billed engine, the resolved proxy tier, and any screenshot-slice add-on.'
   ),
 })
 

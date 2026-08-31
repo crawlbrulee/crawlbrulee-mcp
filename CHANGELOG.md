@@ -4,6 +4,16 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.9.0 (2026-08-30)
+
+### changed
+
+- **the `response_meta.usage` output now reports `engine` and `screenshot_slices` instead of
+  `cache_hit`.** `engine` is the billed engine (`text`, `browser`, `screenshot`, or `cache`),
+  and `screenshot_slices` is the nonnegative slice add-on count. a cache hit is represented by
+  `engine: "cache"`.
+- **requires `@crawlbrulee/sdk` `^0.12.0`**, which carries the engine-aware usage contract.
+
 ## 0.8.1 (2026-08-17)
 
 ### fixed
