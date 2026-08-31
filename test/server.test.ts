@@ -269,7 +269,7 @@ describe('MCP server', () => {
             total_before_max_urls: 2,
             total_detected_before_storage_cap: 2,
           },
-          usage: { credits: 1, engine: 'text', proxy: 'basic', screenshot_slices: 0 },
+          usage: { credits: 1, engine: 'text', proxy: 'basic' },
         },
       }
       harness.mock.map.mockResolvedValueOnce(sdkResponse)

@@ -11,7 +11,7 @@ export {
   Schema_AsyncJobId,
 } from './ApiScrapeAsyncResponse.js'
 export { Schema_ApiMapRequest } from './ApiMapRequest.js'
-export { Schema_ApiMapResult } from './ApiMapResponse.js'
+export { Schema_ApiMapResult, Schema_ApiMapUsageMeta } from './ApiMapResponse.js'
 export { Schema_ApiUsageResponse } from './ApiUsageResponse.js'
 export { Schema_ApiWhoamiResponse } from './ApiWhoamiResponse.js'
 
@@ -28,6 +28,6 @@ export type {
   AsyncJobId,
 } from './ApiScrapeAsyncResponse.js'
 export type { ApiMapRequest } from './ApiMapRequest.js'
-export type { ApiMapResult } from './ApiMapResponse.js'
+export type { ApiMapResult, ApiMapUsageMeta } from './ApiMapResponse.js'
 export type { ApiUsageResponse } from './ApiUsageResponse.js'
 export type { ApiWhoamiResponse } from './ApiWhoamiResponse.js'

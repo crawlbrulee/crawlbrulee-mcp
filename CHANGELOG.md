@@ -4,6 +4,13 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## unreleased
+
+### changed
+
+- map usage now reports only `credits`, `engine`, and `proxy`; scrape and async usage retain
+  `screenshot_slices`.
+
 ## 0.9.0 (2026-08-30)
 
 ### changed

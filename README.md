@@ -158,7 +158,7 @@ fetch the extracted content of a completed async job — the same result shape a
 
 ### `map`
 
-build (or fetch a cached) link-map for a website. combines sitemap discovery with homepage link extraction. use this to enumerate a site before scraping selected pages. the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`credits`, billed `engine`, resolved `proxy` tier, `screenshot_slices`).
+build (or fetch a cached) link-map for a website. combines sitemap discovery with homepage link extraction. use this to enumerate a site before scraping selected pages. the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`credits`, billed `engine`, resolved `proxy` tier). map responses do not include screenshot-slice accounting.
 
 ```jsonc
 {

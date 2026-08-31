@@ -2,7 +2,20 @@
 // Keep in sync with the canonical source on schema bumps.
 
 import { z } from 'zod'
-import { Schema_ApiUsageMeta } from './ApiScrapeResponse.js'
+const API_RESOLVED_PROXY_TIER_VALUES = ['basic', 'advanced'] as const
+
+/** Map usage has no screenshot-slice add-on. */
+export const Schema_ApiMapUsageMeta = z.object({
+  credits: z.number().int().nonnegative().describe('Credits charged for this map request'),
+  engine: z
+    .enum(['text', 'browser', 'screenshot', 'cache'])
+    .describe('The engine base billed for the delivered map result'),
+  proxy: z
+    .enum(API_RESOLVED_PROXY_TIER_VALUES)
+    .describe('The proxy tier the request actually ran on (resolved value — never `auto`)'),
+})
+
+export type ApiMapUsageMeta = z.infer<typeof Schema_ApiMapUsageMeta>
 
 export const Schema_ApiMapLinkItem = z.object({
   url: z.string().describe('The discovered URL'),
@@ -39,8 +52,8 @@ export const Schema_ApiMapResult = z.object({
       truncation: Schema_ApiMapTruncation.describe(
         'Information about whether the results were truncated'
       ),
-      usage: Schema_ApiUsageMeta.describe(
-        'Usage accounting for this map request: credits charged, the billed engine, the resolved proxy tier, and any screenshot-slice add-on.'
+      usage: Schema_ApiMapUsageMeta.describe(
+        'Usage accounting for this map request: credits charged, the billed engine, and the resolved proxy tier.'
       ),
     })
     .describe('Response metadata including pagination, truncation, and usage info'),

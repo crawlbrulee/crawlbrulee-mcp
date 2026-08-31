@@ -10,6 +10,8 @@ const DESCRIPTION = [
   'Build (or fetch a cached) link-map for a website by combining sitemap discovery with homepage',
   'link extraction. Returns paginated lists of discovered URLs. Filterable by link type',
   '(internal / external / subdomain). Use this to enumerate a site before scraping selected pages.',
+  'The response carries `response_meta.usage` = { credits, engine, proxy } — the resolved proxy',
+  'tier is never `auto`; map responses do not include screenshot-slice accounting.',
 ].join(' ')
 
 export function registerMapTool(server: McpServer, getClient: CrawlbruleeClientFactory): void {
@@ -21,12 +23,6 @@ export function registerMapTool(server: McpServer, getClient: CrawlbruleeClientF
       inputSchema: Schema_ApiMapRequest.shape,
       outputSchema: Schema_ApiMapResult.shape,
     },
-    (args: ApiMapRequest) =>
-      // The vendored response schema tracks the new wire contract: the envelope is
-      // `response_meta` (with a `usage` block), whereas the published SDK's `MapResponse`
-      // type still has the older `meta` envelope (no `usage`). The field is both renamed
-      // and widened, so a plain cast won't type-check — bridge through `unknown` until the
-      // SDK catches up. The runtime payload already matches the vendored shape.
-      runTool(async () => (await getClient().map(args)) as unknown as ApiMapResult)
+    (args: ApiMapRequest) => runTool(async () => (await getClient().map(args)) as ApiMapResult)
   )
 }
