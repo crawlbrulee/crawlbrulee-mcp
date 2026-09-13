@@ -123,7 +123,7 @@ export const Schema_ApiScrapeSuccessResponse = z.object({
   url: z
     .string()
     .describe(
-      'The URL that was actually scraped, after any redirects, in cleaned canonical form (tracking params and fragment removed) — the base that links, images, and internal labels are computed against'
+      'The URL that was actually scraped, after any redirects, in normalized form — the base that links, images, and internal labels are computed against'
     ),
   requested_url: z
     .string()

@@ -3,7 +3,6 @@
 
 import { z } from 'zod'
 import {
-  DEFAULT_SCRAPE_SCREENSHOT_CLEANUP,
   getScrapeScreenshotBeforeActionTotals,
   MAX_SCRAPE_SCREENSHOT_TOTAL_SCROLL_PIXELS,
   MAX_SCRAPE_SCREENSHOT_TOTAL_WAIT_MS,
@@ -16,16 +15,6 @@ export const Schema_ApiScrapeScreenshotType = z
 export const Schema_ScrapeScreenshotDeviceMode = z
   .enum(['desktop', 'mobile'])
   .describe('Device mode to emulate for viewport sizing')
-
-export const Schema_ScrapeScreenshotCleanup = z
-  .object({
-    ads_and_popups: z
-      .boolean()
-      .default(DEFAULT_SCRAPE_SCREENSHOT_CLEANUP.ads_and_popups)
-      .describe('Remove ads, cookie banners, and popups before capturing'),
-  })
-  .strict()
-  .describe('Page cleanup options applied before screenshot capture')
 
 export const Schema_ScrapeScreenshotBeforeAction = z.discriminatedUnion('type', [
   z.object({

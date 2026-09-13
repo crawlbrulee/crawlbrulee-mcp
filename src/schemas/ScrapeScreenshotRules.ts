@@ -9,10 +9,6 @@ export const MAX_SCRAPE_SCREENSHOT_TOTAL_SCROLL_PIXELS = 50_000
 
 export const DEFAULT_SCRAPE_SCREENSHOT_DEVICE_MODE = 'desktop' as const
 
-export const DEFAULT_SCRAPE_SCREENSHOT_CLEANUP = {
-  ads_and_popups: true,
-} as const
-
 export type ScrapeScreenshotBeforeActionLike =
   | { type: 'wait'; ms: number }
   | { type: 'scroll'; pixels: number }

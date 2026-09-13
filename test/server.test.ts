@@ -62,6 +62,21 @@ describe('MCP server', () => {
       expect(scrape?.inputSchema.properties).toMatchObject({ url: {}, extract: {} })
     })
 
+    it('exposes the cleanup block, with its description, and not the fields it replaced', async () => {
+      // The tool schema is the whole contract an LLM sees, so a dropped
+      // description is a silently worse tool. Zod's `.extend()` clones without
+      // the registry entry, which ate this exact string in the server repo
+      // until `.describe()` was moved last — pinned here for the same reason.
+      const { tools } = await harness.client.listTools()
+      const scrape = tools.find(t => t.name === 'scrape')
+      const props = scrape?.inputSchema.properties as Record<string, { description?: string }>
+
+      expect(props).toMatchObject({ cleanup: {} })
+      expect(props.cleanup?.description).toContain('Never applies to raw_html')
+      // Both replaced shapes are gone: the strict server schema 400s on either.
+      expect(props).not.toHaveProperty('exclude_selectors')
+    })
+
     it('scrape_async input schema extends scrape with an optional webhook field', async () => {
       const { tools } = await harness.client.listTools()
       const asyncScrape = tools.find(t => t.name === 'scrape_async')
@@ -86,7 +101,7 @@ describe('MCP server', () => {
     it('forwards the request body to the SDK and returns the structured response', async () => {
       const sdkResponse = {
         url: 'https://example.com',
-        requested_url: 'https://example.com/?utm_source=test',
+        requested_url: 'https://example.com/?ref=test',
         metadata: { title: 'Example Domain' },
         response_meta: {
           usage: { credits: 1, engine: 'text', proxy: 'basic', screenshot_slices: 0 },
@@ -258,7 +273,7 @@ describe('MCP server', () => {
         response_meta: {
           pagination: {
             page: 1,
-            limit: 10000,
+            limit: 5000,
             total: 2,
             total_pages: 1,
             has_more: false,
@@ -268,6 +283,9 @@ describe('MCP server', () => {
             response_capped: false,
             total_before_max_urls: 2,
             total_detected_before_storage_cap: 2,
+            discovery_capped: false,
+            sitemaps_skipped: 0,
+            discovery_cap_reason: null,
           },
           usage: { credits: 1, engine: 'text', proxy: 'basic' },
         },

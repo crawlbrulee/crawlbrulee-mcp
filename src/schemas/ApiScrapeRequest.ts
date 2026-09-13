@@ -1,14 +1,13 @@
 import { z } from 'zod'
 import {
-  DEFAULT_SCRAPE_SCREENSHOT_CLEANUP,
   DEFAULT_SCRAPE_SCREENSHOT_DEVICE_MODE,
   MAX_SCRAPE_SCREENSHOT_ACTIONS_BEFORE,
 } from './ScrapeScreenshotRules.js'
+import { DEFAULT_SCRAPE_CLEANUP, Schema_ApiScrapeCleanup } from './ScrapeCleanupSchemas.js'
 import {
   Schema_ApiScrapeScreenshotType,
   Schema_ScrapeScreenshotAfterAction,
   Schema_ScrapeScreenshotBeforeAction,
-  Schema_ScrapeScreenshotCleanup,
   Schema_ScrapeScreenshotDeviceMode,
   refineScrapeScreenshotActionsBefore,
 } from './ScrapeScreenshotSchemas.js'
@@ -49,9 +48,6 @@ export const Schema_ApiScrapeFormatScreenshot = z
     device_mode: Schema_ScrapeScreenshotDeviceMode.default(
       DEFAULT_SCRAPE_SCREENSHOT_DEVICE_MODE
     ).describe('Emulate desktop or mobile device viewport'),
-    cleanup: Schema_ScrapeScreenshotCleanup.default(DEFAULT_SCRAPE_SCREENSHOT_CLEANUP).describe(
-      'Page cleanup options applied before capturing'
-    ),
     actions_before: z
       .array(Schema_ScrapeScreenshotBeforeAction)
       .max(MAX_SCRAPE_SCREENSHOT_ACTIONS_BEFORE)
@@ -141,10 +137,9 @@ export const Schema_ApiScrapeRequest = z
     url: z
       .string()
       .describe(
-        'The URL to scrape. Known tracking parameters (utm_*, mtm_*, ga_*, pk_*, gclid, fbclid, ' +
-          'msclkid, and others) are removed before the page is fetched, so they are neither sent ' +
-          'to the target site nor part of the cache key. Every other query parameter is kept ' +
-          'verbatim and is part of the cache key.'
+        'The URL to scrape. Known tracking parameters are removed before the page is fetched, ' +
+          'so they are neither sent to the target site nor part of the cache key. Every other ' +
+          'query parameter is kept verbatim and is part of the cache key.'
       ),
     extract: Schema_ApiScrapeExtract.prefault({}).describe(
       'Which content formats to extract. Defaults to metadata + cleaned_html.'
@@ -154,10 +149,7 @@ export const Schema_ApiScrapeRequest = z
       .boolean()
       .default(false)
       .describe('Use a headless browser to render JavaScript before scraping'),
-    exclude_selectors: z
-      .array(z.string())
-      .optional()
-      .describe('CSS selectors to exclude from the extracted content'),
+    cleanup: Schema_ApiScrapeCleanup.prefault({ ...DEFAULT_SCRAPE_CLEANUP }),
     proxy: Schema_ApiProxyType.describe('Proxy tier to use for fetching'),
     location: Schema_ApiScrapeLocation.optional(),
   })

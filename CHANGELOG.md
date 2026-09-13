@@ -4,12 +4,34 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
-## unreleased
+## 0.12.0 (2026-09-13)
+
+### changed
+
+- **`map` defaults are smaller: `max_urls` is now `5000` (was `100000`) and `limit` is now `5000`
+  (was `10000`).** the maximums are unchanged (`100000` / `10000`). `max_urls` is a discovery
+  budget, not a trim at the end — discovery stops as soon as that many urls are found, so a
+  smaller value is a faster, cheaper crawl.
+- **`map` response `truncation` gained three fields**: `discovery_capped` (discovery stopped
+  before reading every sitemap file), `sitemaps_skipped` (files skipped or only partly read), and
+  `discovery_cap_reason` (`max_urls`, `time`, `file_budget`, `depth`, `file_size`, or `null`).
+  a map stopped by your own `max_urls` returns exactly that many links with
+  `response_capped: false`, so `discovery_cap_reason` is the signal that the site has more —
+  only `max_urls` is worth a retry.
+- the `map` tool description now states the defaults, the url form of the returned links (the same
+  normalization `scrape` applies to its returned `url`), and the result ordering.
+- documents the api's new `too_many_redirects` error code (HTTP 422: the origin redirected
+  the fetch in a loop). surfaced like every other api error code; no tool schema changed.
+- documents the api's new `page_too_large` error code (HTTP 422: the page's html was too large
+  to process). it is terminal — the same url fails the same way, so never retry it. surfaced
+  like every other api error code; no tool schema changed.
+
+## 0.10.0 (2026-09-02)
 
 ### changed
 
 - map usage now reports only `credits`, `engine`, and `proxy`; scrape and async usage retain
-  `screenshot_slices`.
+  `screenshot_slices`. the map schema accepts only `text` or `cache` as its billing engine.
 
 ## 0.9.0 (2026-08-30)
 
@@ -95,7 +117,7 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 
 - **`requested_url` in the `scrape` / `scrape_result` output schemas** — the url you requested,
   echoed verbatim, before any redirects. the `url` field description now spells out what it always
-  was: the url actually scraped, after any redirects, in cleaned canonical form (tracking params and
+  was: the url actually scraped, after any redirects, in normalized form (the
   fragment removed) — the base that links, images, and internal labels are computed against.
 
 ### changed
@@ -126,11 +148,10 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 
 ### changed
 
-- the `url` argument description now explains how the cache key is built: known tracking parameters
-  (`utm_*`, `mtm_*`, `ga_*`, `pk_*`, `gclid`, `fbclid`, `msclkid`, and more) are stripped before the
-  page is fetched, so they reach neither the target site nor the cache key, while every other query
-  parameter is kept verbatim. the `map` url description states that mapping always targets the site
-  root. both help an agent pick urls that actually hit the cache.
+- the `url` argument description now explains that known tracking parameters are stripped before
+  the page is fetched, so they reach neither the target site nor the cache key, while every other
+  query parameter is kept verbatim. the `map` url description states that mapping always targets
+  the site root. both help an agent pick urls that actually hit the cache.
 
 ## 0.5.1 (2026-07-19)
 

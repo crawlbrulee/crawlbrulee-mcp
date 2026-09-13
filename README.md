@@ -13,7 +13,7 @@ the official [mcp](https://modelcontextprotocol.io) server for the [crawlbrulee]
 this readme covers the mcp server itself — its tools and how to wire it into a host. for how the api behaves — endpoints, parameters, and error semantics — please see our
 [api docs](https://crawlbrulee.com/docs).
 
-> **status:** v0.8.1 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
+> **status:** v0.12.0 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
 
 **get a free api key** → [dashboard.crawlbrulee.com](https://dashboard.crawlbrulee.com)
 
@@ -75,7 +75,7 @@ html, raw html, links, images, screenshot, page metadata).
   },
   "require_js": false,
   "proxy": "basic",
-  "exclude_selectors": ["nav", "footer"],
+  "cleanup": { "ads_and_popups": true, "exclude_selectors": ["nav", "footer"] },
   "cache": { "max_age": 3600 },
   "location": { "locale": "en-US", "country": "US" },
 }
@@ -136,7 +136,7 @@ takes the same input as `scrape` plus an optional per-job completion `webhook`:
 
 **output** — `{ "job_id": "..." }`.
 
-when a `webhook` is attached, we deliver a single signed `scrape.complete` POST to your endpoint once the job reaches a terminal state, with your `metadata` echoed under `data.metadata` and the job's usage under `data.response_meta.usage` — so you can react to completion (and reconcile cost) without polling. verify the `X-Cwbl-Signature` header with the sdk's `verifyWebhookSignature` (configure the signing secret in the dashboard under account → webhooks).
+when a `webhook` is attached, we deliver a single signed `scrape.complete` POST to your endpoint once the job reaches a terminal state, with your `metadata` echoed under `data.metadata` and the job's usage under `data.response_meta.usage` — so you can react to completion (and track cost) without polling. verify the `X-Cwbl-Signature` header with the sdk's `verifyWebhookSignature` (configure the signing secret in the dashboard under account → webhooks).
 
 the job lifecycle is documented under [async scrape](https://crawlbrulee.com/docs/scrape/async); the delivery contract and payload shape under [webhooks](https://crawlbrulee.com/docs/scrape/webhooks), with the signature scheme in [webhook verification](https://crawlbrulee.com/docs/webhook-verification).
 
@@ -158,7 +158,13 @@ fetch the extracted content of a completed async job — the same result shape a
 
 ### `map`
 
-build (or fetch a cached) link-map for a website. combines sitemap discovery with homepage link extraction. use this to enumerate a site before scraping selected pages. the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`credits`, billed `engine`, resolved `proxy` tier). map responses do not include screenshot-slice accounting.
+build (or fetch a cached) link-map for a website. combines sitemap discovery with homepage link extraction. use this to enumerate a site before scraping selected pages. each link is just `{ url }`.
+
+`max_urls` (default `5000`, max `100000`) is a discovery budget, not a trim at the end — discovery stops as soon as that many urls are found, so a smaller value is a faster, cheaper crawl. `limit` (default `5000`, max `10000`) only pages the answer.
+
+returned urls are normalized the same way `scrape` normalizes its returned `url`, so map-then-scrape stays on one host. results are ordered with the most useful links first.
+
+the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`credits`, billed `engine`, resolved `proxy` tier). map responses do not include screenshot-slice accounting.
 
 ```jsonc
 {
@@ -170,6 +176,24 @@ build (or fetch a cached) link-map for a website. combines sitemap discovery wit
   "limit": 1000,
 }
 ```
+
+a map stopped by your own `max_urls` returns exactly that many links with `response_capped: false` — the signal that the site has more is `truncation.discovery_cap_reason`:
+
+```jsonc
+{
+  "truncation": {
+    "storage_capped": false,
+    "response_capped": false,
+    "total_before_max_urls": 5000,
+    "total_detected_before_storage_cap": 5000,
+    "discovery_capped": true, // discovery stopped before reading every sitemap file
+    "sitemaps_skipped": 3, // files skipped or only partly read
+    "discovery_cap_reason": "max_urls", // retry with a higher max_urls; other reasons won't help
+  },
+}
+```
+
+`discovery_cap_reason` is one of `max_urls`, `time`, `file_budget`, `depth`, `file_size`, or `null` when nothing stopped discovery. only `max_urls` is worth a retry — the rest mean the site itself is big, slow or deep.
 
 see the [map endpoint](https://crawlbrulee.com/docs/map) for discovery rules and pagination semantics.
 
@@ -185,7 +209,7 @@ returns the organization name, token name, and truncated token preview for the c
 
 ## errors
 
-every tool returns an mcp error envelope (`isError: true`) when the api call fails. the error text follows a stable format:
+every tool returns an mcp error result (`isError: true`) when the api call fails. the error text follows a stable format:
 
 ```
 [<errorName>] <message> (HTTP <status>)
@@ -204,6 +228,8 @@ agents can branch on the `errorName` code. the set comes from the sdk's `ApiErro
 | `invalid_url`                   | target url was rejected before fetching.                                                      |
 | `blocked_url`                   | target url is on the blocklist.                                                               |
 | `antibot_blocked`               | origin's anti-bot defenses blocked the fetch.                                                 |
+| `too_many_redirects`            | origin redirected the fetch in a loop (HTTP 422). the target's doing — don't retry blindly.   |
+| `page_too_large`                | the page's html was too large to process (HTTP 422). terminal — never retry it.               |
 | `scrape_error`                  | origin returned an error during scraping.                                                     |
 | `unsupported_screenshot_output` | screenshot-only request on a content type that can't be screenshotted (HTTP 422). not billed. |
 | `not_found`                     | async job ID unknown (e.g. bad `job_id` to `scrape_status` / `scrape_result`).                |
