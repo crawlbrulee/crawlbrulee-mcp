@@ -13,7 +13,7 @@ the official [mcp](https://modelcontextprotocol.io) server for the [crawlbrulee]
 this readme covers the mcp server itself — its tools and how to wire it into a host. for how the api behaves — endpoints, parameters, and error semantics — please see our
 [api docs](https://crawlbrulee.com/docs).
 
-> **status:** v0.12.0 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
+> **status:** v0.13.0 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
 
 **get a free api key** → [dashboard.crawlbrulee.com](https://dashboard.crawlbrulee.com)
 
@@ -91,7 +91,7 @@ html, raw html, links, images, screenshot, page metadata).
   "response_meta": {
     "usage": {
       "credits": 1,
-      "engine": "text", // "text" | "browser" | "screenshot" | "cache"
+      "engine": "http", // "http" | "browser" | "screenshot" | "cache"
       "proxy": "basic", // resolved tier actually used: "basic" | "advanced" (never "auto")
       "screenshot_slices": 0, // 1 when the screenshot-split add-on was billed, otherwise 0
     },

@@ -11,8 +11,8 @@ const DISCOVERY_CAP_REASONS = ['max_urls', 'time', 'file_budget', 'depth', 'file
 export const Schema_ApiMapUsageMeta = z.object({
   credits: z.number().int().nonnegative().describe('Credits charged for this map request'),
   engine: z
-    .enum(['text', 'cache'])
-    .describe('The map billing engine: `text` for fresh discovery or `cache` for a cached result'),
+    .enum(['http', 'cache'])
+    .describe('The map billing engine: `http` for fresh discovery or `cache` for a cached result'),
   proxy: z
     .enum(API_RESOLVED_PROXY_TIER_VALUES)
     .describe('The proxy tier the request actually ran on (resolved value — never `auto`)'),

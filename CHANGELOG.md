@@ -4,6 +4,15 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.13.0 (2026-09-17)
+
+### changed
+
+- **the `http` engine replaces `text`.** the `scrape`, `scrape_status`, `scrape_result`, and `map`
+  responses now report `engine: "http"` for a result the plain fetch engine delivered (no
+  JavaScript run), where they used to report `"text"`. the response schemas accept `http`,
+  `browser`, `screenshot`, and `cache` (map: `http` and `cache`). the credit base is unchanged.
+
 ## 0.12.0 (2026-09-13)
 
 ### changed

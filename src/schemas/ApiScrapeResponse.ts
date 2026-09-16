@@ -67,9 +67,9 @@ export const Schema_ApiUsageMeta = z.object({
       'Credits actually charged for this request. Always equals the engine base × the proxy multiplier, plus screenshot_slices. A cache hit has engine "cache" (base 0), so it costs only the parts we still had to compute — a newly produced screenshot-slice variant — and is otherwise free.'
     ),
   engine: z
-    .enum(['text', 'browser', 'screenshot', 'cache'])
+    .enum(['http', 'browser', 'screenshot', 'cache'])
     .describe(
-      'The engine base the request was billed at — "text" (1 credit), "browser" (3), "screenshot" (5), or "cache" (0, the result was served from cache) — before the proxy multiplier. Reflects what was delivered, never what was requested.'
+      'The engine base the request was billed at — "http" (1 credit), "browser" (3), "screenshot" (5), or "cache" (0, the result was served from cache) — before the proxy multiplier. Reflects what was delivered, never what was requested.'
     ),
   proxy: z
     .enum(API_RESOLVED_PROXY_TIER_VALUES)
