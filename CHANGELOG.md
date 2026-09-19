@@ -9,9 +9,11 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 ### changed
 
 - **the `http` engine replaces `text`.** the `scrape`, `scrape_status`, `scrape_result`, and `map`
-  responses now report `engine: "http"` for a result the plain fetch engine delivered (no
-  JavaScript run), where they used to report `"text"`. the response schemas accept `http`,
+  responses now report `engine: "http"` when the plain fetch engine delivered the result (no
+  JavaScript ran). they used to report `"text"`. the response schemas accept `http`,
   `browser`, `screenshot`, and `cache` (map: `http` and `cache`). the credit base is unchanged.
+  pair this release with the api that reports `http`: older servers return `text`, which this
+  version's response schema rejects, and older releases of this server reject `http`.
 
 ## 0.12.0 (2026-09-13)
 
