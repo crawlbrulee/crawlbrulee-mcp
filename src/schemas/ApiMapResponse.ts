@@ -5,7 +5,14 @@ import { z } from 'zod'
 const API_RESOLVED_PROXY_TIER_VALUES = ['basic', 'advanced'] as const
 
 /** Which limit stopped sitemap discovery first. The FIRST limit to fire wins. */
-const DISCOVERY_CAP_REASONS = ['max_urls', 'time', 'file_budget', 'depth', 'file_size'] as const
+const DISCOVERY_CAP_REASONS = [
+  'max_urls',
+  'time',
+  'file_budget',
+  'depth',
+  'file_size',
+  'unread_files',
+] as const
 
 /** Map usage has no screenshot-slice add-on. */
 export const Schema_ApiMapUsageMeta = z.object({
@@ -71,8 +78,11 @@ export const Schema_ApiMapTruncation = z.object({
         '"max_urls" means your own max_urls was reached — ask again with a higher one to get more. ' +
         '"time" means discovery ran out of its time budget, "file_budget" that the site has more ' +
         'sitemap files than one request reads, "depth" that its sitemap indexes nest too deeply, ' +
-        'and "file_size" that a sitemap file was too large to read. Only "max_urls" is something ' +
-        'you can change from the request.'
+        'and "file_size" that a sitemap file was too large to read. "unread_files" means a sitemap ' +
+        'file the site publishes could not be read at all this time — the request for it failed or ' +
+        'was rate limited, or the file was not a readable sitemap. Only "max_urls" is a limit you ' +
+        'can raise from the request; "unread_files" is often temporary, so asking again later can ' +
+        'return more.'
     ),
 })
 

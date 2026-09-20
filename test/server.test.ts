@@ -300,6 +300,40 @@ describe('MCP server', () => {
       expect(res.isError).toBeFalsy()
       expect(res.structuredContent).toEqual(sdkResponse)
     })
+
+    it('accepts an unread_files discovery cap reason', async () => {
+      const sdkResponse = {
+        links: [{ url: 'https://example.com/a' }],
+        response_meta: {
+          pagination: {
+            page: 1,
+            limit: 5000,
+            total: 1,
+            total_pages: 1,
+            has_more: false,
+          },
+          truncation: {
+            storage_capped: false,
+            response_capped: false,
+            total_before_max_urls: 1,
+            total_detected_before_storage_cap: 1,
+            discovery_capped: true,
+            sitemaps_skipped: 2,
+            discovery_cap_reason: 'unread_files',
+          },
+          usage: { credits: 1, engine: 'http', proxy: 'basic' },
+        },
+      }
+      harness.mock.map.mockResolvedValueOnce(sdkResponse)
+
+      const res = await harness.client.callTool({
+        name: 'map',
+        arguments: { url: 'https://example.com' },
+      })
+
+      expect(res.isError).toBeFalsy()
+      expect(res.structuredContent).toEqual(sdkResponse)
+    })
   })
 
   describe('usage + whoami', () => {

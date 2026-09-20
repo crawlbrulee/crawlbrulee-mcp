@@ -13,7 +13,7 @@ the official [mcp](https://modelcontextprotocol.io) server for the [crawlbrulee]
 this readme covers the mcp server itself — its tools and how to wire it into a host. for how the api behaves — endpoints, parameters, and error semantics — please see our
 [api docs](https://crawlbrulee.com/docs).
 
-> **status:** v0.13.0 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
+> **status:** v0.13.1 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
 
 **get a free api key** → [dashboard.crawlbrulee.com](https://dashboard.crawlbrulee.com)
 
@@ -188,12 +188,12 @@ a map stopped by your own `max_urls` returns exactly that many links with `respo
     "total_detected_before_storage_cap": 5000,
     "discovery_capped": true, // discovery stopped before reading every sitemap file
     "sitemaps_skipped": 3, // files skipped or only partly read
-    "discovery_cap_reason": "max_urls", // retry with a higher max_urls; other reasons won't help
+    "discovery_cap_reason": "max_urls", // retry with a higher max_urls
   },
 }
 ```
 
-`discovery_cap_reason` is one of `max_urls`, `time`, `file_budget`, `depth`, `file_size`, or `null` when nothing stopped discovery. only `max_urls` is worth a retry — the rest mean the site itself is big, slow or deep.
+`discovery_cap_reason` is one of `max_urls`, `time`, `file_budget`, `depth`, `file_size`, `unread_files`, or `null` when nothing stopped discovery. only `max_urls` is a limit you can raise from the request. `unread_files` means a sitemap file the site publishes could not be read at all this time — often temporary, so asking again later can return more. `time`, `file_budget`, `depth` and `file_size` mean the site itself is big, slow or deep, and a retry will not help.
 
 see the [map endpoint](https://crawlbrulee.com/docs/map) for discovery rules and pagination semantics.
 

@@ -4,6 +4,23 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.13.1 (2026-09-20)
+
+### fixed
+
+- **a `map` call no longer fails when discovery reports `unread_files`.** the api added
+  `unread_files` to `truncation.discovery_cap_reason`, but this server's response schema only
+  accepted the five older reasons, so such a map came back as an output validation error instead
+  of the map. the schema now accepts `unread_files` and the map is returned.
+
+### changed
+
+- the `map` tool description and the `discovery_cap_reason` field description now explain
+  `unread_files`: a sitemap file the site publishes could not be read at all this time, which is
+  often temporary — so asking again later can return more. `time`, `file_budget`, `depth` and
+  `file_size` still mean a retry will not help, and `max_urls` is still the only limit you can
+  raise from the request.
+
 ## 0.13.0 (2026-09-17)
 
 ### changed
