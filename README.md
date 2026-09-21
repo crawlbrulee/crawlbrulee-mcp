@@ -13,8 +13,6 @@ the official [mcp](https://modelcontextprotocol.io) server for the [crawlbrulee]
 this readme covers the mcp server itself — its tools and how to wire it into a host. for how the api behaves — endpoints, parameters, and error semantics — please see our
 [api docs](https://crawlbrulee.com/docs).
 
-> **status:** v0.13.1 (beta). tool surface is stabilizing — expect minor changes between 0.x releases.
-
 **get a free api key** → [dashboard.crawlbrulee.com](https://dashboard.crawlbrulee.com)
 
 ---
@@ -280,4 +278,4 @@ docs: [crawlbrulee.com/docs](https://crawlbrulee.com/docs) · dashboard: [dashbo
 
 ## license
 
-[AGPL-3.0-only](./LICENSE)
+[Apache-2.0](./LICENSE)
