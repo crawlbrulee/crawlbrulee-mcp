@@ -3,7 +3,18 @@
 [![npm](https://img.shields.io/npm/v/@crawlbrulee/mcp?style=flat-square&label=npm)](https://www.npmjs.com/package/@crawlbrulee/mcp)
 [![license](https://img.shields.io/npm/l/@crawlbrulee/mcp?style=flat-square&label=license)](./LICENSE)
 
-the official [mcp](https://modelcontextprotocol.io) server for the [crawlbrulee](https://crawlbrulee.com) web-scraping api. lets mcp-aware ai agents — Claude Code, Codex, Cursor, Claude Desktop — scrape pages, map sites, and check their crawlbrulee usage as native tool calls.
+**EU-native web scraping for AI agents & developers.**
+
+plug crawlbrulee into your agent. the official [mcp](https://modelcontextprotocol.io) server for [crawlbrulee](https://crawlbrulee.com) gives mcp-aware agents — Claude Code, Codex, Cursor, Claude Desktop — native tools to scrape pages, map sites, run background jobs, and check usage. one call turns any url into clean markdown, screenshots, metadata and links.
+
+- **everything runs in the EU.** the fetch, the render, the cache and your result never leave EU servers. the proxy exit is the one hop you choose: pick an EU exit and nothing leaves at all. gdpr-aligned, with a data processing agreement.
+- **output made for models.** markdown with the page chrome stripped and the links kept, ready for the prompt. full-page screenshots can come back as tiles sized for an image model.
+- **the hard parts, handled.** headless Chrome when a page needs it, rotating proxies with country selection, automatic retries, ad and cookie-banner removal, caching, background jobs and signed webhooks.
+- **start free.** 750 credits, no credit card.
+
+**get a free api key** → [dashboard.crawlbrulee.com](https://dashboard.crawlbrulee.com)
+
+the server:
 
 - `npx`-runnable — zero install.
 - wraps the [`@crawlbrulee/sdk`](https://www.npmjs.com/package/@crawlbrulee/sdk) under the hood; this mcp is just a thin protocol adapter.
@@ -12,8 +23,6 @@ the official [mcp](https://modelcontextprotocol.io) server for the [crawlbrulee]
 
 this readme covers the mcp server itself — its tools and how to wire it into a host. for how the api behaves — endpoints, parameters, and error semantics — please see our
 [api docs](https://crawlbrulee.com/docs).
-
-**get a free api key** → [dashboard.crawlbrulee.com](https://dashboard.crawlbrulee.com)
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "@crawlbrulee/mcp",
-  "version": "1.0.0",
-  "description": "Official MCP server for the crawlbrulee API — scrape and map URLs from MCP-aware agents (Claude Code, Codex, Cursor).",
+  "version": "1.0.1",
+  "description": "official mcp server for crawlbrulee — EU-native web scraping for AI agents & developers. native scrape and map tools for your agent.",
   "keywords": [
     "crawlbrulee",
     "mcp",
@@ -14,7 +14,13 @@
     "sitemap",
     "claude",
     "cursor",
-    "codex"
+    "codex",
+    "eu",
+    "gdpr",
+    "ai-agents",
+    "llm",
+    "rag",
+    "markdown"
   ],
   "license": "Apache-2.0",
   "homepage": "https://crawlbrulee.com",
