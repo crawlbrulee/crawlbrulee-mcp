@@ -4,6 +4,13 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 1.0.2 (2026-09-22)
+
+### changed
+
+- **listed in the official mcp registry** as `io.github.crawlbrulee/mcp`. the package carries the
+  `mcpName` field the registry checks. no code or tool changes.
+
 ## 1.0.1 (2026-09-21)
 
 ### changed

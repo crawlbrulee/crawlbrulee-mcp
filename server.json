@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.crawlbrulee/mcp",
+  "description": "EU-native web scraping for AI agents. scrape pages, map sites, run background jobs and check usage as native tools.",
+  "repository": {
+    "url": "https://github.com/crawlbrulee/crawlbrulee-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://crawlbrulee.com",
+  "version": "1.0.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@crawlbrulee/mcp",
+      "version": "1.0.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CRAWLBRULEE_API_KEY",
+          "description": "your crawlbrulee api key. get a free one at https://dashboard.crawlbrulee.com",
+          "format": "string",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
