@@ -1,0 +1,56 @@
+name: Publish to MCP Registry
+
+# Lists the server in the official MCP registry (registry.modelcontextprotocol.io).
+# Run it by hand after the npm publish for that version has finished; the registry
+# checks that the npm package carries the same mcpName. Auth is GitHub OIDC, so
+# the job needs no secret: the registry trusts the repo owner (crawlbrulee) and
+# grants the io.github.crawlbrulee/* namespace.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: publish-mcp-registry
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # OIDC token for the registry
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check server.json matches package.json
+        run: |
+          set -eu
+          pkg_name=$(jq -r .mcpName package.json)
+          pkg_ver=$(jq -r .version package.json)
+          srv_name=$(jq -r .name server.json)
+          srv_ver=$(jq -r .version server.json)
+          npm_ver=$(jq -r '.packages[0].version' server.json)
+          test "$pkg_name" = "$srv_name" || { echo "::error::mcpName ($pkg_name) != server.json name ($srv_name)"; exit 1; }
+          test "$pkg_ver" = "$srv_ver" || { echo "::error::package.json version ($pkg_ver) != server.json version ($srv_ver)"; exit 1; }
+          test "$pkg_ver" = "$npm_ver" || { echo "::error::package.json version ($pkg_ver) != server.json packages[0].version ($npm_ver)"; exit 1; }
+
+      - name: Check the npm package is live
+        run: |
+          set -eu
+          ver=$(jq -r .version package.json)
+          code=$(curl -s -o /dev/null -w '%{http_code}' "https://registry.npmjs.org/@crawlbrulee%2fmcp/$ver")
+          test "$code" = "200" || { echo "::error::@crawlbrulee/mcp@$ver is not on npm yet (HTTP $code). Publish it first."; exit 1; }
+
+      - name: Install mcp-publisher
+        run: |
+          curl -sL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Log in to the registry (GitHub OIDC)
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish server.json
+        run: ./mcp-publisher publish
+
+      - name: Show the registry entry
+        run: |
+          sleep 5
+          curl -s "https://registry.modelcontextprotocol.io/v0.1/servers?search=$(jq -r .name server.json)" | jq '.metadata, [.servers[] | (.server // .) | {name, version}]'
