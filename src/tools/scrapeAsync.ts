@@ -29,7 +29,7 @@ export function registerScrapeAsyncTool(
       title: 'Scrape a URL asynchronously',
       description: DESCRIPTION,
       inputSchema: Schema_ApiScrapeAsyncRequest.shape,
-      outputSchema: Schema_ApiScrapeAsyncResponse.shape,
+      outputSchema: Schema_ApiScrapeAsyncResponse,
     },
     (args: ApiScrapeAsyncRequest) =>
       runTool(

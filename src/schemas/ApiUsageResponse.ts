@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 
-export const Schema_ApiUsageResponse = z.object({
+export const Schema_ApiUsageResponse = z.looseObject({
   total_credits: z
     .number()
     .int()

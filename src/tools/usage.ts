@@ -18,7 +18,7 @@ export function registerUsageTool(server: McpServer, getClient: CrawlbruleeClien
       title: 'Get current usage',
       description: DESCRIPTION,
       inputSchema: {},
-      outputSchema: Schema_ApiUsageResponse.shape,
+      outputSchema: Schema_ApiUsageResponse,
     },
     () => runTool(async () => (await getClient().usage()) as ApiUsageResponse)
   )

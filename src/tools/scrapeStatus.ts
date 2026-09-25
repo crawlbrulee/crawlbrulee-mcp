@@ -28,7 +28,7 @@ export function registerScrapeStatusTool(
       title: 'Check an async scrape job status',
       description: DESCRIPTION,
       inputSchema: Schema_AsyncJobId.shape,
-      outputSchema: Schema_ApiScrapeStatusResponse.shape,
+      outputSchema: Schema_ApiScrapeStatusResponse,
     },
     (args: AsyncJobId) =>
       // The SDK's `AsyncJobStatusResponse` is snake_case (job_id, created_at),

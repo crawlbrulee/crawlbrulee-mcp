@@ -34,7 +34,7 @@ export function registerMapTool(server: McpServer, getClient: CrawlbruleeClientF
       title: 'Map a website',
       description: DESCRIPTION,
       inputSchema: Schema_ApiMapRequest.shape,
-      outputSchema: Schema_ApiMapResult.shape,
+      outputSchema: Schema_ApiMapResult,
     },
     (args: ApiMapRequest) =>
       // Double cast: the vendored schema above is the wire contract. The SDK's

@@ -1,6 +1,6 @@
 {
   "name": "@crawlbrulee/mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "mcpName": "io.github.crawlbrulee/mcp",
   "description": "official mcp server for crawlbrulee — EU-native web scraping for AI agents & developers. native scrape and map tools for your agent.",
   "keywords": [

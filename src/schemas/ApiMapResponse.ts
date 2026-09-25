@@ -2,6 +2,7 @@
 // Keep in sync with the canonical source on schema bumps.
 
 import { z } from 'zod'
+import { openEnum } from './openEnum.js'
 const API_RESOLVED_PROXY_TIER_VALUES = ['basic', 'advanced'] as const
 
 /** Which limit stopped sitemap discovery first. The FIRST limit to fire wins. */
@@ -15,23 +16,23 @@ const DISCOVERY_CAP_REASONS = [
 ] as const
 
 /** Map usage has no screenshot-slice add-on. */
-export const Schema_ApiMapUsageMeta = z.object({
+export const Schema_ApiMapUsageMeta = z.looseObject({
   credits: z.number().int().nonnegative().describe('Credits charged for this map request'),
-  engine: z
-    .enum(['http', 'cache'])
-    .describe('The map billing engine: `http` for fresh discovery or `cache` for a cached result'),
-  proxy: z
-    .enum(API_RESOLVED_PROXY_TIER_VALUES)
-    .describe('The proxy tier the request actually ran on (resolved value — never `auto`)'),
+  engine: openEnum(['http', 'cache']).describe(
+    'The map billing engine: `http` for fresh discovery or `cache` for a cached result'
+  ),
+  proxy: openEnum(API_RESOLVED_PROXY_TIER_VALUES).describe(
+    'The proxy tier the request actually ran on (resolved value — never `auto`)'
+  ),
 })
 
 export type ApiMapUsageMeta = z.infer<typeof Schema_ApiMapUsageMeta>
 
-export const Schema_ApiMapLinkItem = z.object({
+export const Schema_ApiMapLinkItem = z.looseObject({
   url: z.string().describe('The discovered URL'),
 })
 
-export const Schema_ApiMapPagination = z.object({
+export const Schema_ApiMapPagination = z.looseObject({
   page: z.number().int().positive().describe('Current page number'),
   limit: z.number().int().positive().describe('Number of items per page'),
   total: z.number().int().nonnegative().describe('Total number of URLs in the map'),
@@ -39,7 +40,7 @@ export const Schema_ApiMapPagination = z.object({
   has_more: z.boolean().describe('Whether more pages are available'),
 })
 
-export const Schema_ApiMapTruncation = z.object({
+export const Schema_ApiMapTruncation = z.looseObject({
   storage_capped: z.boolean().describe('Whether the stored map hit the 100000-URL storage cap.'),
   response_capped: z
     .boolean()
@@ -70,8 +71,7 @@ export const Schema_ApiMapTruncation = z.object({
     .describe(
       'How many sitemap files were skipped or only partly read during discovery, because a file was too large, could not be fetched, or the discovery limits were reached.'
     ),
-  discovery_cap_reason: z
-    .enum(DISCOVERY_CAP_REASONS)
+  discovery_cap_reason: openEnum(DISCOVERY_CAP_REASONS)
     .nullable()
     .describe(
       'Which limit stopped sitemap discovery first, or null when nothing stopped it. ' +
@@ -86,10 +86,10 @@ export const Schema_ApiMapTruncation = z.object({
     ),
 })
 
-export const Schema_ApiMapResult = z.object({
+export const Schema_ApiMapResult = z.looseObject({
   links: z.array(Schema_ApiMapLinkItem).describe('List of discovered URLs for the current page'),
   response_meta: z
-    .object({
+    .looseObject({
       pagination: Schema_ApiMapPagination.describe('Pagination details for the result set'),
       truncation: Schema_ApiMapTruncation.describe(
         'Information about whether the results were truncated'

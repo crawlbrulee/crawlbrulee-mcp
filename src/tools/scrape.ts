@@ -35,7 +35,7 @@ export function registerScrapeTool(server: McpServer, getClient: CrawlbruleeClie
       title: 'Scrape a URL',
       description: DESCRIPTION,
       inputSchema: Schema_ApiScrapeRequest.shape,
-      outputSchema: Schema_ApiScrapeSuccessResponse.shape,
+      outputSchema: Schema_ApiScrapeSuccessResponse,
     },
     (args: ApiScrapeRequest) =>
       runTool(async () => (await getClient().scrape(args)) as ApiScrapeSuccessResponse)

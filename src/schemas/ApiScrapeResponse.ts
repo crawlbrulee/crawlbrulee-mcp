@@ -2,15 +2,15 @@
 // Keep in sync with the canonical source on schema bumps.
 
 import { z } from 'zod'
-import { Schema_ApiScrapeScreenshotType } from './ScrapeScreenshotSchemas.js'
+import { openEnum } from './openEnum.js'
 
-export const Schema_ApiViewport = z.object({
+export const Schema_ApiViewport = z.looseObject({
   width: z.number().describe('Viewport width in pixels'),
   height: z.number().describe('Viewport height in pixels'),
   device_scale_factor: z.number().describe('Device pixel ratio used for the capture'),
 })
 
-export const Schema_ApiScreenshotProperties = z.object({
+export const Schema_ApiScreenshotProperties = z.looseObject({
   file_name: z.string().describe('File name of the screenshot image'),
   mime: z.string().describe('MIME type of the screenshot (e.g. image/png)'),
   width: z.number().describe('Image width in pixels'),
@@ -18,16 +18,17 @@ export const Schema_ApiScreenshotProperties = z.object({
   viewport: Schema_ApiViewport.describe('Viewport dimensions used during capture'),
 })
 
-export const Schema_ApiScreenshotSlice = z.object({
+export const Schema_ApiScreenshotSlice = z.looseObject({
   row_nr: z.number().describe('Row index of this slice (0-based)'),
   url: z.string().describe('URL to download this slice image'),
   type: z.literal('slice').describe('Slice type identifier'),
   properties: Schema_ApiScreenshotProperties.describe('Image properties for this slice'),
 })
 
-export const Schema_ApiScreenshotResponse = z.object({
+export const Schema_ApiScreenshotResponse = z.looseObject({
   url: z.string().describe('URL to download the full screenshot image'),
-  type: Schema_ApiScrapeScreenshotType.describe('Screenshot capture mode that was used'),
+  // Same values as the request's screenshot type, but open: see openEnum.
+  type: openEnum(['viewport', 'full_page']).describe('Screenshot capture mode that was used'),
   properties: Schema_ApiScreenshotProperties.describe('Image properties for the full screenshot'),
   slices: z
     .array(Schema_ApiScreenshotSlice)
@@ -35,12 +36,12 @@ export const Schema_ApiScreenshotResponse = z.object({
     .describe('Individual tile slices (present when slice action_after was requested)'),
 })
 
-export const Schema_ApiPageInlineImgItem = z.object({
+export const Schema_ApiPageInlineImgItem = z.looseObject({
   url: z.string().describe('Absolute URL of the image'),
   alt: z.string().nullable().describe('Alt text of the image, or null if not set'),
 })
 
-export const Schema_ApiPageLink = z.object({
+export const Schema_ApiPageLink = z.looseObject({
   text: z.string().describe('Anchor text of the link'),
   href: z
     .string()
@@ -58,7 +59,7 @@ export const Schema_ApiPageLink = z.object({
 // resolves `auto` to a concrete tier and reports the resolved value here.
 export const API_RESOLVED_PROXY_TIER_VALUES = ['basic', 'advanced'] as const
 
-export const Schema_ApiUsageMeta = z.object({
+export const Schema_ApiUsageMeta = z.looseObject({
   credits: z
     .number()
     .int()
@@ -66,16 +67,12 @@ export const Schema_ApiUsageMeta = z.object({
     .describe(
       'Credits actually charged for this request. Always equals the engine base × the proxy multiplier, plus screenshot_slices. A cache hit has engine "cache" (base 0), so it costs only the parts we still had to compute — a newly produced screenshot-slice variant — and is otherwise free.'
     ),
-  engine: z
-    .enum(['http', 'browser', 'screenshot', 'cache'])
-    .describe(
-      'The engine base the request was billed at — "http" (1 credit), "browser" (3), "screenshot" (5), or "cache" (0, the result was served from cache) — before the proxy multiplier. Reflects what was delivered, never what was requested.'
-    ),
-  proxy: z
-    .enum(API_RESOLVED_PROXY_TIER_VALUES)
-    .describe(
-      'The proxy tier the request actually ran on (resolved value — never `auto`; `auto` is resolved server-side to `basic` or `advanced`).'
-    ),
+  engine: openEnum(['http', 'browser', 'screenshot', 'cache']).describe(
+    'The engine base the request was billed at — "http" (1 credit), "browser" (3), "screenshot" (5), or "cache" (0, the result was served from cache) — before the proxy multiplier. Reflects what was delivered, never what was requested.'
+  ),
+  proxy: openEnum(API_RESOLVED_PROXY_TIER_VALUES).describe(
+    'The proxy tier the request actually ran on (resolved value — never `auto`; `auto` is resolved server-side to `basic` or `advanced`).'
+  ),
   screenshot_slices: z
     .number()
     .int()
@@ -85,13 +82,13 @@ export const Schema_ApiUsageMeta = z.object({
     ),
 })
 
-export const Schema_ApiResponseMeta = z.object({
+export const Schema_ApiResponseMeta = z.looseObject({
   usage: Schema_ApiUsageMeta.describe(
     'Usage accounting for this request: credits charged, billed engine, resolved proxy tier, and screenshot-slice add-on.'
   ),
 })
 
-export const Schema_ApiScrapeMeta = z.object({
+export const Schema_ApiScrapeMeta = z.looseObject({
   title: z.string().optional().describe('Page title from the <title> tag'),
   description: z.string().optional().describe('Meta description'),
   keywords: z.array(z.string()).optional().describe('Meta keywords'),
@@ -119,7 +116,7 @@ export const Schema_ApiScrapeMeta = z.object({
     .describe('Resolved favicon URL for the page (best-effort, from <head> icon hints + manifest)'),
 })
 
-export const Schema_ApiScrapeSuccessResponse = z.object({
+export const Schema_ApiScrapeSuccessResponse = z.looseObject({
   url: z
     .string()
     .describe(

@@ -24,7 +24,7 @@ export function registerScrapeResultTool(
       title: 'Get an async scrape job result',
       description: DESCRIPTION,
       inputSchema: Schema_AsyncJobId.shape,
-      outputSchema: Schema_ApiScrapeSuccessResponse.shape,
+      outputSchema: Schema_ApiScrapeSuccessResponse,
     },
     (args: AsyncJobId) =>
       runTool(

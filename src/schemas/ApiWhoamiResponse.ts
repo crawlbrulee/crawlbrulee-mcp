@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 
-export const Schema_ApiWhoamiResponse = z.object({
+export const Schema_ApiWhoamiResponse = z.looseObject({
   organization_name: z.string().describe('Display name of the organization that owns the token.'),
   token_name: z
     .string()

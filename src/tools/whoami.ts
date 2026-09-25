@@ -18,7 +18,7 @@ export function registerWhoamiTool(server: McpServer, getClient: CrawlbruleeClie
       title: 'Identify the API token',
       description: DESCRIPTION,
       inputSchema: {},
-      outputSchema: Schema_ApiWhoamiResponse.shape,
+      outputSchema: Schema_ApiWhoamiResponse,
     },
     () => runTool(async () => (await getClient().whoami()) as ApiWhoamiResponse)
   )

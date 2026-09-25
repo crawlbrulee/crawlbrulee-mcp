@@ -4,6 +4,15 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 1.0.3 (2026-09-25)
+
+### fixed
+
+- **tool results keep working when the api adds a field.** the output schemas now allow fields and
+  enum values this version doesn't know yet, so a host that checks tool results against the schema
+  accepts them instead of refusing the whole result. a result that is missing a required field is
+  still refused, and tool input is unchanged: unknown input keys are still rejected.
+
 ## 1.0.2 (2026-09-22)
 
 ### changed
