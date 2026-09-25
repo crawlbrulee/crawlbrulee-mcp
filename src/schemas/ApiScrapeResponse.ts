@@ -59,32 +59,49 @@ export const Schema_ApiPageLink = z.looseObject({
 // resolves `auto` to a concrete tier and reports the resolved value here.
 export const API_RESOLVED_PROXY_TIER_VALUES = ['basic', 'advanced'] as const
 
+// Usage parts. Canonical requires them; here they are optional, because older api
+// versions send only `credits`, `engine`, `proxy` and `screenshot_slices`.
+const Schema_CreditCost = z.number().int().nonnegative()
+
+// Canonical is the literal union 1 | 5. Kept an open number here, like openEnum:
+// a new multiplier on the server must not make a host refuse the whole result.
+export const Schema_ApiProxyMultiplier = z.number().int().positive()
+
+export const PROXY_MULTIPLIER_DESCRIPTION =
+  'The multiplier of the proxy tier the request ran on: 1 for "basic", 5 for "advanced". Always reported, even when the engine cost is 0. Older api versions do not send it.'
+
 export const Schema_ApiUsageMeta = z.looseObject({
-  credits: z
-    .number()
-    .int()
-    .nonnegative()
-    .describe(
-      'Credits actually charged for this request. Always equals the engine base × the proxy multiplier, plus screenshot_slices. A cache hit has engine "cache" (base 0), so it costs only the parts we still had to compute — a newly produced screenshot-slice variant — and is otherwise free.'
-    ),
+  total_credit_cost: Schema_CreditCost.optional().describe(
+    'Credits charged for this request. Always equals engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost. 0 when nothing is billed: a cache hit, or a page whose status is not billed (see page_status_code). Older api versions do not send it; read `credits` then, which has the same value.'
+  ),
+  engine_credit_cost: Schema_CreditCost.optional().describe(
+    'The engine base charged, before the proxy multiplier: 1 for "http", 3 for "browser", 5 for "screenshot", 0 for "cache". Also 0 when the page is not billed (see page_status_code). Older api versions do not send it.'
+  ),
+  proxy_multiplier: Schema_ApiProxyMultiplier.optional().describe(PROXY_MULTIPLIER_DESCRIPTION),
+  screenshot_slicing_credit_cost: Schema_CreditCost.optional().describe(
+    'The screenshot slicing add-on: 1 when the screenshot was split into slices on this request (a flat +1 credit outside the proxy multiplier, however many slices it made), else 0. A cache hit that reused slices that already existed costs 0. Older api versions do not send it; read `screenshot_slices` then, which has the same value.'
+  ),
   engine: openEnum(['http', 'browser', 'screenshot', 'cache']).describe(
-    'The engine base the request was billed at — "http" (1 credit), "browser" (3), "screenshot" (5), or "cache" (0, the result was served from cache) — before the proxy multiplier. Reflects what was delivered, never what was requested.'
+    'The engine the request was billed at — "http", "browser", "screenshot", or "cache" (the result was served from cache). Reflects what was delivered, never what was requested.'
   ),
   proxy: openEnum(API_RESOLVED_PROXY_TIER_VALUES).describe(
-    'The proxy tier the request actually ran on (resolved value — never `auto`; `auto` is resolved server-side to `basic` or `advanced`).'
+    'The proxy tier the request actually ran on (resolved value — never `auto`; `auto` is resolved server-side to `basic` or `advanced`). "advanced" multiplies the engine base by 5.'
   ),
-  screenshot_slices: z
-    .number()
-    .int()
-    .nonnegative()
-    .describe(
-      'Whether this request was billed the screenshot-split add-on: 1 when the screenshot was split on this request (a flat +1 credit outside the proxy multiplier, regardless of how many slices the split produced), else 0 — including a cache hit that reused an already-existing slice variant.'
-    ),
+  credits: Schema_CreditCost.meta({
+    description:
+      'Deprecated: use total_credit_cost, which always has the same value. This field will be removed in a future version.',
+    deprecated: true,
+  }).optional(),
+  screenshot_slices: Schema_CreditCost.meta({
+    description:
+      'Deprecated: use screenshot_slicing_credit_cost, which always has the same value. Despite its name this is a 0/1 charge, not a count of slices. This field will be removed in a future version.',
+    deprecated: true,
+  }).optional(),
 })
 
 export const Schema_ApiResponseMeta = z.looseObject({
   usage: Schema_ApiUsageMeta.describe(
-    'Usage accounting for this request: credits charged, billed engine, resolved proxy tier, and screenshot-slice add-on.'
+    'What this request cost and why: total_credit_cost = engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost, plus the billed engine and the resolved proxy tier.'
   ),
 })
 
@@ -125,6 +142,13 @@ export const Schema_ApiScrapeSuccessResponse = z.looseObject({
   requested_url: z
     .string()
     .describe('The URL you requested, echoed verbatim — before any redirects'),
+  page_status_code: z
+    .number()
+    .int()
+    .optional()
+    .describe(
+      'The HTTP status the site answered with for the final page, after redirects. Check it before you trust the content. A page the site served is a successful result whatever its status: a 404 or 503 page comes back with its content here, not as an error, so a 404 means the markdown is the site\'s "not found" page, not the page you asked for. Billing follows this status: 2xx and 4xx pages are billed, except 403, 407, 408, 429 and 451; 5xx pages are never billed. Older api versions do not send it; they only returned pages that loaded normally.'
+    ),
   content_type: z.string().optional().describe('Content-Type header returned by the server'),
   unsupported_fields: z
     .array(z.string())
@@ -151,7 +175,7 @@ export const Schema_ApiScrapeSuccessResponse = z.looseObject({
       'Non-error notices about the scrape. Truncation codes — `screenshot_truncated` (long page exceeded the scrolling-screenshot height cap), `links_truncated` / `inline_images_truncated` (page had more links/images than the per-page extraction caps), `raw_html_truncated` / `metadata_truncated` (rendered HTML exceeded the per-page size budget) — mean the field is present but capped. Unavailability codes — `links_unavailable` / `inline_images_unavailable` / `metadata_unavailable` — mean that optional field could not be extracted and was omitted (null/empty) while the rest of the scrape succeeded, so an empty field carrying one of these does NOT mean the page had none. Stable string codes — clients can switch on them. Warnings are stored with the result: async result fetches and cache hits carry them too, filtered to the fields the request asked for.'
     ),
   response_meta: Schema_ApiResponseMeta.describe(
-    'Request-level metadata. `response_meta.usage` reports credits charged, the billed engine, the resolved proxy tier, and any screenshot-slice add-on.'
+    'Request-level metadata. `response_meta.usage` reports what the request cost (total_credit_cost and its parts), the billed engine and the resolved proxy tier.'
   ),
 })
 

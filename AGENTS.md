@@ -45,6 +45,12 @@ public list is" as the only thing expressible here.
   breaks the day the api adds a field. Tools pass the **whole** output schema to `registerTool()`,
   never `.shape` — with `.shape` the MCP SDK wraps it in its own strict object. Request schemas stay
   strict. `test/responseTolerance.test.ts` pins all of this.
+- **Fields the api added later are optional here.** `page_status_code` and the usage parts
+  (`total_credit_cost`, `engine_credit_cost`, `proxy_multiplier`, `screenshot_slicing_credit_cost`)
+  are required in canonical but `.optional()` here, because older api versions do not send them.
+  `proxy_multiplier` is an open `z.number().int().positive()`, not canonical's `1 | 5` literal union,
+  for the same reason as `openEnum`. The deprecated `credits` / `screenshot_slices` keep canonical's
+  `.meta({ description, deprecated: true })`, which flows into the tool's JSON output schema.
 
 The public list is mirrored by hand from `PUBLIC_API_PROXY_TIER_VALUES` in
 `crawlbrulee/packages/core/src/model/common/ApiScrapeRequest.ts` (it cannot be imported here

@@ -1,8 +1,9 @@
-// VENDORED from crawlbrulee/packages/core/src/model/common/ApiMapResponse.ts
+// VENDORED from crawlbrulee/packages/core/src/model/common/ApiMapResponse.ts + ApiUsage.ts
 // Keep in sync with the canonical source on schema bumps.
 
 import { z } from 'zod'
 import { openEnum } from './openEnum.js'
+import { PROXY_MULTIPLIER_DESCRIPTION, Schema_ApiProxyMultiplier } from './ApiScrapeResponse.js'
 const API_RESOLVED_PROXY_TIER_VALUES = ['basic', 'advanced'] as const
 
 /** Which limit stopped sitemap discovery first. The FIRST limit to fire wins. */
@@ -15,15 +16,41 @@ const DISCOVERY_CAP_REASONS = [
   'unread_files',
 ] as const
 
-/** Map usage has no screenshot-slice add-on. */
+/** Map usage has no screenshot-slice add-on. The new parts are optional: older api versions send only `credits`, `engine` and `proxy`. */
 export const Schema_ApiMapUsageMeta = z.looseObject({
-  credits: z.number().int().nonnegative().describe('Credits charged for this map request'),
+  total_credit_cost: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional()
+    .describe(
+      'Credits charged for this map request. Always equals engine_credit_cost × proxy_multiplier. 0 for a cache hit, and for an empty map when the site answered only with statuses we do not bill (a 5xx, for example) or not at all. Older api versions do not send it; read `credits` then, which has the same value.'
+    ),
+  engine_credit_cost: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional()
+    .describe(
+      'The engine base charged, before the proxy multiplier: 1 for "http", 0 for "cache". Also 0 for an empty map that is not billed. Older api versions do not send it.'
+    ),
+  proxy_multiplier: Schema_ApiProxyMultiplier.optional().describe(PROXY_MULTIPLIER_DESCRIPTION),
   engine: openEnum(['http', 'cache']).describe(
     'The map billing engine: `http` for fresh discovery or `cache` for a cached result'
   ),
   proxy: openEnum(API_RESOLVED_PROXY_TIER_VALUES).describe(
     'The proxy tier the request actually ran on (resolved value — never `auto`)'
   ),
+  credits: z
+    .number()
+    .int()
+    .nonnegative()
+    .meta({
+      description:
+        'Deprecated: use total_credit_cost, which always has the same value. This field will be removed in a future version.',
+      deprecated: true,
+    })
+    .optional(),
 })
 
 export type ApiMapUsageMeta = z.infer<typeof Schema_ApiMapUsageMeta>
@@ -95,7 +122,7 @@ export const Schema_ApiMapResult = z.looseObject({
         'Information about whether the results were truncated'
       ),
       usage: Schema_ApiMapUsageMeta.describe(
-        'Usage accounting for this map request: credits charged, the billed engine, and the resolved proxy tier.'
+        'What this map request cost: total_credit_cost = engine_credit_cost × proxy_multiplier, plus the billed engine and the resolved proxy tier.'
       ),
     })
     .describe('Response metadata including pagination, truncation, and usage info'),

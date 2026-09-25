@@ -4,6 +4,38 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 1.1.0 (unreleased)
+
+### added
+
+- **`page_status_code` in the `scrape` and `scrape_result` output.** it is the HTTP status the site
+  answered with for the final page, after redirects. a page the site served is now a normal result,
+  whatever its status: a 404 or 503 page comes back with its content, not as a tool error. the tool
+  descriptions tell the agent to check `page_status_code` before it trusts the content, so a "page
+  not found" text is not taken for the real page. 2xx and 4xx pages are billed, except 403, 407,
+  408, 429 and 451; 5xx pages are never billed.
+- **the price parts in `response_meta.usage`.** `scrape`, `scrape_result` and `scrape_status` now
+  describe `total_credit_cost`, `engine_credit_cost`, `proxy_multiplier` and
+  `screenshot_slicing_credit_cost`, where
+  `total_credit_cost = engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost`. `map` gets the same fields minus slicing.
+- **a clear message for `target_unreachable`** (HTTP 502): the site could not be reached at all. the
+  tool error keeps its `[target_unreachable] <message> (HTTP 502)` start and adds what to do next:
+  retry later or check the url. it is not billed.
+
+### deprecated
+
+- **`credits` and `screenshot_slices` in `response_meta.usage`.** use `total_credit_cost` and
+  `screenshot_slicing_credit_cost`, which always have the same values. the old fields are still
+  sent and still in the output schema, marked deprecated and optional, so this version keeps
+  working once the api stops sending them. they will be removed in a future version.
+
+### changed
+
+- all new fields are optional in the output schema, so the server keeps working with api versions
+  that don't send them yet. tool input is unchanged.
+- the `map` description explains that an empty map is free when the site answered only with
+  errors, or not at all.
+
 ## 1.0.3 (2026-09-25)
 
 ### fixed

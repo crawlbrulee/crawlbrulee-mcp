@@ -16,7 +16,7 @@ const DESCRIPTION = [
   'Optionally attach a per-job completion `webhook`: we deliver a single',
   'signed `scrape.complete` POST to your endpoint when the job finishes (HTTPS required',
   'in production), and echoes your opaque `webhook.metadata` back in the delivery',
-  '(under `data.metadata`, alongside `data.response_meta.usage`).',
+  '(under `data.metadata`, alongside `data.page_status_code` (on success) and `data.response_meta.usage`).',
 ].join(' ')
 
 export function registerScrapeAsyncTool(

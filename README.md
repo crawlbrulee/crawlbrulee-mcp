@@ -88,23 +88,34 @@ html, raw html, links, images, screenshot, page metadata).
 }
 ```
 
-**output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is simply left out while the rest is still returned — but a screenshot-only call that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. the result also carries a top-level `response_meta.usage` block:
+**output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is simply left out while the rest is still returned — but a screenshot-only call that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. the result also carries `page_status_code` and a top-level `response_meta.usage` block:
 
 ```jsonc
 {
   "url": "https://example.com",
+  "requested_url": "https://example.com",
+  "page_status_code": 200, // the site's own HTTP status for the final page
   "markdown": "...",
   "metadata": { "title": "Example Domain" },
   "response_meta": {
     "usage": {
-      "credits": 1,
+      // total_credit_cost = engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost
+      "total_credit_cost": 1,
+      "engine_credit_cost": 1, // http 1, browser 3, screenshot 5, cache 0
+      "proxy_multiplier": 1, // basic 1, advanced 5
+      "screenshot_slicing_credit_cost": 0, // 1 when the screenshot was split into slices, otherwise 0
       "engine": "http", // "http" | "browser" | "screenshot" | "cache"
       "proxy": "basic", // resolved tier actually used: "basic" | "advanced" (never "auto")
-      "screenshot_slices": 0, // 1 when the screenshot-split add-on was billed, otherwise 0
+      "credits": 1, // deprecated: same as total_credit_cost
+      "screenshot_slices": 0, // deprecated: same as screenshot_slicing_credit_cost
     },
   },
 }
 ```
+
+**a page the site served is a result, not an error.** `page_status_code` is the HTTP status the site answered with for the final page, after redirects. a 404, 410 or 503 page comes back with its content and its status here, so check `page_status_code` before you trust the content: a 404 means the markdown is the site's "not found" page. 2xx and 4xx pages are billed, except 403, 407, 408, 429 and 451; 5xx pages are never billed. when the site can't be reached at all, the tool returns a `target_unreachable` error instead (see [errors](#errors)).
+
+`credits` and `screenshot_slices` are the old names of `total_credit_cost` and `screenshot_slicing_credit_cost`. they are deprecated and will be removed in a future version. older api versions send only the old names and no `page_status_code`.
 
 alongside `response_meta.usage`, the result surfaces any non-fatal `warnings` — stable string codes an agent can switch on. an outsized page is truncated rather than refused, and the code names which part was cut:
 
@@ -149,7 +160,7 @@ the job lifecycle is documented under [async scrape](https://crawlbrulee.com/doc
 
 ### `scrape_status`
 
-look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). once the job is `done` the response also carries a `response_meta.usage` block (`credits`, billed `engine`, resolved `proxy` tier, `screenshot_slices`). a cache hit is represented by `engine: "cache"`. poll until `done`, then call `scrape_result`.
+look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). once the job is `done` the response also carries a `response_meta.usage` block (`total_credit_cost` and its parts, billed `engine`, resolved `proxy` tier). a cache hit is represented by `engine: "cache"`. a job whose page the site served ends `done` even when that page is a 404 — read `page_status_code` in the result. poll until `done`, then call `scrape_result`.
 
 ```jsonc
 { "job_id": "..." }
@@ -157,7 +168,7 @@ look up the current lifecycle status of an async job: `pending`, `running`, `don
 
 ### `scrape_result`
 
-fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool (including `metadata` and `response_meta.usage`). errors if the job is still `pending`/`running`, so check `scrape_status` first.
+fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool (including `page_status_code`, `metadata` and `response_meta.usage`). errors if the job is still `pending`/`running`, so check `scrape_status` first.
 
 ```jsonc
 { "job_id": "..." }
@@ -171,7 +182,7 @@ build (or fetch a cached) link-map for a website. combines sitemap discovery wit
 
 returned urls are normalized the same way `scrape` normalizes its returned `url`, so map-then-scrape stays on one host. results are ordered with the most useful links first.
 
-the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`credits`, billed `engine`, resolved `proxy` tier). map responses do not include screenshot-slice accounting.
+the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`total_credit_cost` = `engine_credit_cost` × `proxy_multiplier`, billed `engine`, resolved `proxy` tier, and the deprecated `credits`). map has no screenshot slicing and no `page_status_code`, since it reads many files, not one page. a map that found nothing because the site answered only with statuses we don't bill (a `5xx`, for example), or not at all, is empty and free.
 
 ```jsonc
 {
@@ -222,6 +233,8 @@ every tool returns an mcp error result (`isError: true`) when the api call fails
 [<errorName>] <message> (HTTP <status>)
 ```
 
+a few codes add a short next step after that, e.g. `target_unreachable`. branch on the `errorName` code, not on the rest of the text.
+
 agents can branch on the `errorName` code. the set comes from the sdk's `ApiErrorName` union plus two synthetic codes added by this mcp (`missing_api_key`, `internal_error`):
 
 | code                            | meaning                                                                                       |
@@ -237,7 +250,8 @@ agents can branch on the `errorName` code. the set comes from the sdk's `ApiErro
 | `antibot_blocked`               | origin's anti-bot defenses blocked the fetch.                                                 |
 | `too_many_redirects`            | origin redirected the fetch in a loop (HTTP 422). the target's doing — don't retry blindly.   |
 | `page_too_large`                | the page's html was too large to process (HTTP 422). terminal — never retry it.               |
-| `scrape_error`                  | origin returned an error during scraping.                                                     |
+| `target_unreachable`            | we could not reach the site at all (HTTP 502). not billed. retry later or check the url.      |
+| `scrape_error`                  | the scrape could not be completed. a page the site served, even a 404, is never this error.   |
 | `unsupported_screenshot_output` | screenshot-only request on a content type that can't be screenshotted (HTTP 422). not billed. |
 | `not_found`                     | async job ID unknown (e.g. bad `job_id` to `scrape_status` / `scrape_result`).                |
 | `request_timeout`               | network / read timeout. safe to retry.                                                        |

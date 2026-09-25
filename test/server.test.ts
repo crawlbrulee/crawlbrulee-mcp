@@ -6,6 +6,7 @@ import {
   RateLimitError,
   ValidationError,
 } from '@crawlbrulee/sdk'
+import type { ApiErrorName } from '@crawlbrulee/sdk'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { buildServer } from '../src/server.js'
@@ -378,6 +379,15 @@ describe('MCP server', () => {
         'validation error',
         new ValidationError('url required', { status: 400, errorName: 'validation_error' }),
         /\[validation_error\]/,
+      ],
+      [
+        'target_unreachable (the SDK has no class for it yet, so it arrives as a plain error)',
+        new CrawlbruleeError('Could not reach the target site.', {
+          status: 502,
+          // sdk 1.0's ApiErrorName does not list it yet; the api sends it anyway.
+          errorName: 'target_unreachable' as string as ApiErrorName,
+        }),
+        /^\[target_unreachable\] Could not reach the target site\. \(HTTP 502\) .*retry later/i,
       ],
       [
         'unknown SDK error falls back to crawlbrulee_error',

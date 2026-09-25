@@ -32,10 +32,15 @@ export const Schema_ApiScrapeStatusResponse = z.looseObject({
     'Current state of the job (pending, running, done, failed)'
   ),
   created_at: z.string().describe('ISO-8601 UTC timestamp when the job was created'),
-  error: z.string().optional().describe('Error message if the job ended in `failed`'),
+  error: z
+    .string()
+    .optional()
+    .describe(
+      'Error message if the job ended in `failed`. A job whose page the site served, even a 404 page, ends `done`, not `failed`: read `page_status_code` in the `scrape_result`.'
+    ),
   response_meta: Schema_ApiResponseMeta.optional().describe(
     'Usage accounting for the finished job. Present only once the job is `done`; ' +
-      '`response_meta.usage` reports credits charged, the billed engine, the resolved proxy tier, and any screenshot-slice add-on.'
+      '`response_meta.usage` reports what the job cost (total_credit_cost and its parts), the billed engine and the resolved proxy tier.'
   ),
 })
 

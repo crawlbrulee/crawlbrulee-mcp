@@ -23,8 +23,12 @@ const DESCRIPTION = [
   '`limit` (default 5000, max 10000) only pages the answer.',
   'Returned URLs are normalized the same way `scrape` normalizes its returned `url`, so',
   'map-then-scrape stays on one host. Results are ordered with the most useful links first.',
-  'The response carries `response_meta.usage` = { credits, engine, proxy } — the resolved proxy',
-  'tier is never `auto`; map responses do not include screenshot-slice accounting.',
+  'The response carries `response_meta.usage`: `total_credit_cost` = `engine_credit_cost` ×',
+  '`proxy_multiplier`, plus `engine` and `proxy` (the resolved tier, never `auto`); `credits` is the',
+  'old, deprecated name of `total_credit_cost`. Map has no screenshot slicing and no',
+  '`page_status_code`: it reads many files, not one page. A map that found nothing because the site',
+  "answered only with statuses we don't bill (a 5xx, for example), or not at all, is empty and free. If the site cannot be reached, the",
+  'tool can return a `target_unreachable` error (HTTP 502, not billed): retry later or check the URL.',
 ].join(' ')
 
 export function registerMapTool(server: McpServer, getClient: CrawlbruleeClientFactory): void {

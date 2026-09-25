@@ -4,6 +4,7 @@ import {
   ENV_API_KEY,
   RateLimitError,
 } from '@crawlbrulee/sdk'
+import type { ApiErrorName } from '@crawlbrulee/sdk'
 import { describe, expect, it } from 'vitest'
 
 import { toToolError } from '../src/errors.js'
@@ -31,6 +32,25 @@ describe('toToolError', () => {
   it('falls back to crawlbrulee_error when errorName is null on a generic SDK error', () => {
     const err = new CrawlbruleeError('boom', { status: 500, errorName: null })
     expect(extractText(toToolError(err))).toBe('[crawlbrulee_error] boom (HTTP 500)')
+  })
+
+  it('adds a next step to target_unreachable, so an agent knows to retry or check the url', () => {
+    const err = new CrawlbruleeError('Could not reach the target site.', {
+      status: 502,
+      // sdk 1.0's ApiErrorName does not list it yet; the api sends it anyway.
+      errorName: 'target_unreachable' as string as ApiErrorName,
+    })
+    const text = extractText(toToolError(err))
+    // The stable prefix agents branch on stays the same.
+    expect(text).toMatch(/^\[target_unreachable\] Could not reach the target site\. \(HTTP 502\)/)
+    expect(text).toMatch(/retry later/i)
+    expect(text).toMatch(/check the url/i)
+    expect(text).toMatch(/not billed/i)
+  })
+
+  it('leaves errors without a hint unchanged', () => {
+    const err = new CrawlbruleeError('nope', { status: 403, errorName: 'antibot_blocked' })
+    expect(extractText(toToolError(err))).toBe('[antibot_blocked] nope (HTTP 403)')
   })
 
   it('rewrites the SDK missing-API-key error into a missing_api_key remediation message', () => {
