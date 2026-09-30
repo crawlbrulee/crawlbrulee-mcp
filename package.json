@@ -63,7 +63,7 @@
     "prepublishOnly": "pnpm verify"
   },
   "dependencies": {
-    "@crawlbrulee/sdk": "^1.0.0",
+    "@crawlbrulee/sdk": "^1.1.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^4.0.0"
   },

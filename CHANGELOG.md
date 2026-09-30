@@ -4,7 +4,7 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
-## 1.1.0 (unreleased)
+## 1.1.0 (2026-09-30)
 
 ### added
 
@@ -31,6 +31,7 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 
 ### changed
 
+- needs `@crawlbrulee/sdk` 1.1.0 or later, which types the new fields.
 - all new fields are optional in the output schema, so the server keeps working with api versions
   that don't send them yet. tool input is unchanged.
 - the `map` description explains that an empty map is free when the site answered only with
