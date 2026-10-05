@@ -49,8 +49,8 @@ public list is" as the only thing expressible here.
   (`total_credit_cost`, `engine_credit_cost`, `proxy_multiplier`, `screenshot_slicing_credit_cost`)
   are required in canonical but `.optional()` here, because older api versions do not send them.
   `proxy_multiplier` is an open `z.number().int().positive()`, not canonical's `1 | 5` literal union,
-  for the same reason as `openEnum`. The deprecated `credits` / `screenshot_slices` keep canonical's
-  `.meta({ description, deprecated: true })`, which flows into the tool's JSON output schema.
+  for the same reason as `openEnum`. The old names `credits` / `screenshot_slices` are gone from the
+  schemas; the output objects are loose, so a response that still carries them validates.
 
 The public list is mirrored by hand from `PUBLIC_API_PROXY_TIER_VALUES` in
 `crawlbrulee/packages/core/src/model/common/ApiScrapeRequest.ts` (it cannot be imported here

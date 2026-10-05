@@ -85,8 +85,11 @@ html, raw html, links, images, screenshot, page metadata).
   "cleanup": { "ads_and_popups": true, "exclude_selectors": ["nav", "footer"] },
   "cache": { "max_age": 3600 },
   "location": { "locale": "en-US", "country": "US" },
+  "zero_data_retention": false,
 }
 ```
+
+`zero_data_retention` (boolean, default `false`) keeps the result out of the shared cache; anything stored to deliver it is kept for 24 hours, then deleted. it adds 1 credit and must be enabled for your organization. `scrape_async` takes it too. see [zero data retention](https://crawlbrulee.com/docs/zero-data-retention).
 
 **output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is simply left out while the rest is still returned — but a screenshot-only call that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. the result also carries `page_status_code` and a top-level `response_meta.usage` block:
 
@@ -99,23 +102,20 @@ html, raw html, links, images, screenshot, page metadata).
   "metadata": { "title": "Example Domain" },
   "response_meta": {
     "usage": {
-      // total_credit_cost = engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost
+      // total_credit_cost = engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost + zero_data_retention_credit_cost
       "total_credit_cost": 1,
       "engine_credit_cost": 1, // http 1, browser 3, screenshot 5, cache 0
       "proxy_multiplier": 1, // basic 1, advanced 5
       "screenshot_slicing_credit_cost": 0, // 1 when the screenshot was split into slices, otherwise 0
+      "zero_data_retention_credit_cost": 0, // 1 when zero_data_retention added its credit, otherwise 0
       "engine": "http", // "http" | "browser" | "screenshot" | "cache"
       "proxy": "basic", // resolved tier actually used: "basic" | "advanced" (never "auto")
-      "credits": 1, // deprecated: same as total_credit_cost
-      "screenshot_slices": 0, // deprecated: same as screenshot_slicing_credit_cost
     },
   },
 }
 ```
 
 **a page the site served is a result, not an error.** `page_status_code` is the HTTP status the site answered with for the final page, after redirects. a 404, 410 or 503 page comes back with its content and its status here, so check `page_status_code` before you trust the content: a 404 means the markdown is the site's "not found" page. 2xx and 4xx pages are billed, except 403, 407, 408, 429 and 451; 5xx pages are never billed. when the site can't be reached at all, the tool returns a `target_unreachable` error instead (see [errors](#errors)).
-
-`credits` and `screenshot_slices` are the old names of `total_credit_cost` and `screenshot_slicing_credit_cost`. they are deprecated and will be removed in a future version. older api versions send only the old names and no `page_status_code`.
 
 alongside `response_meta.usage`, the result surfaces any non-fatal `warnings` — stable string codes an agent can switch on. an outsized page is truncated rather than refused, and the code names which part was cut:
 
@@ -182,7 +182,7 @@ build (or fetch a cached) link-map for a website. combines sitemap discovery wit
 
 returned urls are normalized the same way `scrape` normalizes its returned `url`, so map-then-scrape stays on one host. results are ordered with the most useful links first.
 
-the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`total_credit_cost` = `engine_credit_cost` × `proxy_multiplier`, billed `engine`, resolved `proxy` tier, and the deprecated `credits`). map has no screenshot slicing and no `page_status_code`, since it reads many files, not one page. a map that found nothing because the site answered only with statuses we don't bill (a `5xx`, for example), or not at all, is empty and free.
+the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`total_credit_cost` = `engine_credit_cost` × `proxy_multiplier` + `zero_data_retention_credit_cost`, billed `engine`, resolved `proxy` tier). map has no screenshot slicing and no `page_status_code`, since it reads many files, not one page. a map that found nothing because the site answered only with statuses we don't bill (a `5xx`, for example), or not at all, is empty and free.
 
 ```jsonc
 {
@@ -192,8 +192,11 @@ the response's `response_meta` carries `pagination`, `truncation`, and a `usage`
   "max_urls": 5000,
   "page": 1,
   "limit": 1000,
+  "zero_data_retention": false,
 }
 ```
+
+`zero_data_retention` works as it does on `scrape` (see [zero data retention](https://crawlbrulee.com/docs/zero-data-retention)).
 
 a map stopped by your own `max_urls` returns exactly that many links with `response_capped: false` — the signal that the site has more is `truncation.discovery_cap_reason`:
 
@@ -233,32 +236,33 @@ every tool returns an mcp error result (`isError: true`) when the api call fails
 [<errorName>] <message> (HTTP <status>)
 ```
 
-a few codes add a short next step after that, e.g. `target_unreachable`. branch on the `errorName` code, not on the rest of the text.
+a few codes add a short next step after that, e.g. `target_unreachable` and `zero_data_retention_not_enabled`. branch on the `errorName` code, not on the rest of the text.
 
 agents can branch on the `errorName` code. the set comes from the sdk's `ApiErrorName` union plus two synthetic codes added by this mcp (`missing_api_key`, `internal_error`):
 
-| code                            | meaning                                                                                       |
-| ------------------------------- | --------------------------------------------------------------------------------------------- |
-| `missing_api_key`               | `CRAWLBRULEE_API_KEY` is not set in the mcp host's env.                                       |
-| `invalid_credentials`           | server rejected the api key (revoked, wrong env, etc.).                                       |
-| `service_unavailable`           | temporary backend failure (HTTP 503). your key is fine — retry with backoff.                  |
-| `too_many_requests`             | rate limit hit — back off and retry.                                                          |
-| `usage_allocation_error`        | plan credit / concurrency cap exceeded. show `usage` to user.                                 |
-| `validation_error`              | input failed server validation.                                                               |
-| `invalid_url`                   | target url was rejected before fetching.                                                      |
-| `blocked_url`                   | target url is on the blocklist.                                                               |
-| `antibot_blocked`               | origin's anti-bot defenses blocked the fetch.                                                 |
-| `too_many_redirects`            | origin redirected the fetch in a loop (HTTP 422). the target's doing — don't retry blindly.   |
-| `page_too_large`                | the page's html was too large to process (HTTP 422). terminal — never retry it.               |
-| `target_unreachable`            | we could not reach the site at all (HTTP 502). not billed. retry later or check the url.      |
-| `scrape_error`                  | the scrape could not be completed. a page the site served, even a 404, is never this error.   |
-| `unsupported_screenshot_output` | screenshot-only request on a content type that can't be screenshotted (HTTP 422). not billed. |
-| `not_found`                     | async job ID unknown (e.g. bad `job_id` to `scrape_status` / `scrape_result`).                |
-| `request_timeout`               | network / read timeout. safe to retry.                                                        |
-| `client_closed_request`         | caller cancelled before completion.                                                           |
-| `internal_server_error`         | unhandled server-side failure.                                                                |
-| `crawlbrulee_error`             | sdk error without a typed name.                                                               |
-| `internal_error`                | bug in this mcp — please open an issue.                                                       |
+| code                              | meaning                                                                                       |
+| --------------------------------- | --------------------------------------------------------------------------------------------- |
+| `missing_api_key`                 | `CRAWLBRULEE_API_KEY` is not set in the mcp host's env.                                       |
+| `invalid_credentials`             | server rejected the api key (revoked, wrong env, etc.).                                       |
+| `service_unavailable`             | temporary backend failure (HTTP 503). your key is fine — retry with backoff.                  |
+| `too_many_requests`               | rate limit hit — back off and retry.                                                          |
+| `usage_allocation_error`          | plan credit / concurrency cap exceeded. show `usage` to user.                                 |
+| `validation_error`                | input failed server validation.                                                               |
+| `invalid_url`                     | target url was rejected before fetching.                                                      |
+| `blocked_url`                     | target url is on the blocklist.                                                               |
+| `antibot_blocked`                 | origin's anti-bot defenses blocked the fetch.                                                 |
+| `too_many_redirects`              | origin redirected the fetch in a loop (HTTP 422). the target's doing — don't retry blindly.   |
+| `page_too_large`                  | the page's html was too large to process (HTTP 422). terminal — never retry it.               |
+| `target_unreachable`              | we could not reach the site at all (HTTP 502). not billed. retry later or check the url.      |
+| `zero_data_retention_not_enabled` | `zero_data_retention` is not enabled for your organization (HTTP 403). not billed.            |
+| `scrape_error`                    | the scrape could not be completed. a page the site served, even a 404, is never this error.   |
+| `unsupported_screenshot_output`   | screenshot-only request on a content type that can't be screenshotted (HTTP 422). not billed. |
+| `not_found`                       | async job ID unknown (e.g. bad `job_id` to `scrape_status` / `scrape_result`).                |
+| `request_timeout`                 | network / read timeout. safe to retry.                                                        |
+| `client_closed_request`           | caller cancelled before completion.                                                           |
+| `internal_server_error`           | unhandled server-side failure.                                                                |
+| `crawlbrulee_error`               | sdk error without a typed name.                                                               |
+| `internal_error`                  | bug in this mcp — please open an issue.                                                       |
 
 the api docs carry the canonical [error reference](https://crawlbrulee.com/docs/errors) — every error name, what causes it, and how to recover.
 

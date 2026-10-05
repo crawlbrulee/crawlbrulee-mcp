@@ -152,6 +152,12 @@ export const Schema_ApiScrapeRequest = z
     cleanup: Schema_ApiScrapeCleanup.prefault({ ...DEFAULT_SCRAPE_CLEANUP }),
     proxy: Schema_ApiProxyType.describe('Proxy tier to use for fetching'),
     location: Schema_ApiScrapeLocation.optional(),
+    zero_data_retention: z
+      .boolean()
+      .optional()
+      .describe(
+        'Keeps the result out of the shared cache; anything stored to deliver it is kept for 24 hours, then deleted. Adds 1 credit. Must be enabled for your organization. See https://crawlbrulee.com/docs/zero-data-retention.'
+      ),
   })
   .strict()
 

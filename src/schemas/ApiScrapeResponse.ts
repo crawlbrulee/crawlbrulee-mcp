@@ -60,7 +60,7 @@ export const Schema_ApiPageLink = z.looseObject({
 export const API_RESOLVED_PROXY_TIER_VALUES = ['basic', 'advanced'] as const
 
 // Usage parts. Canonical requires them; here they are optional, because older api
-// versions send only `credits`, `engine`, `proxy` and `screenshot_slices`.
+// versions do not send them.
 const Schema_CreditCost = z.number().int().nonnegative()
 
 // Canonical is the literal union 1 | 5. Kept an open number here, like openEnum:
@@ -72,14 +72,17 @@ export const PROXY_MULTIPLIER_DESCRIPTION =
 
 export const Schema_ApiUsageMeta = z.looseObject({
   total_credit_cost: Schema_CreditCost.optional().describe(
-    'Credits charged for this request. Always equals engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost. 0 when nothing is billed: a cache hit, or a page whose status is not billed (see page_status_code). Older api versions do not send it; read `credits` then, which has the same value.'
+    'Credits charged for this request. Always equals engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost + zero_data_retention_credit_cost. 0 when nothing is billed: a cache hit, or a page whose status is not billed (see page_status_code). Older api versions do not send it.'
   ),
   engine_credit_cost: Schema_CreditCost.optional().describe(
     'The engine base charged, before the proxy multiplier: 1 for "http", 3 for "browser", 5 for "screenshot", 0 for "cache". Also 0 when the page is not billed (see page_status_code). Older api versions do not send it.'
   ),
   proxy_multiplier: Schema_ApiProxyMultiplier.optional().describe(PROXY_MULTIPLIER_DESCRIPTION),
   screenshot_slicing_credit_cost: Schema_CreditCost.optional().describe(
-    'The screenshot slicing add-on: 1 when the screenshot was split into slices on this request (a flat +1 credit outside the proxy multiplier, however many slices it made), else 0. A cache hit that reused slices that already existed costs 0. Older api versions do not send it; read `screenshot_slices` then, which has the same value.'
+    'The screenshot slicing add-on: 1 when the screenshot was split into slices on this request (a flat +1 credit outside the proxy multiplier, however many slices it made), else 0. A cache hit that reused slices that already existed costs 0. Older api versions do not send it.'
+  ),
+  zero_data_retention_credit_cost: Schema_CreditCost.optional().describe(
+    'Credits added by zero data retention: 1 on a billed, fresh result, else 0. Older api versions do not send it.'
   ),
   engine: openEnum(['http', 'browser', 'screenshot', 'cache']).describe(
     'The engine the request was billed at — "http", "browser", "screenshot", or "cache" (the result was served from cache). Reflects what was delivered, never what was requested.'
@@ -87,21 +90,11 @@ export const Schema_ApiUsageMeta = z.looseObject({
   proxy: openEnum(API_RESOLVED_PROXY_TIER_VALUES).describe(
     'The proxy tier the request actually ran on (resolved value — never `auto`; `auto` is resolved server-side to `basic` or `advanced`). "advanced" multiplies the engine base by 5.'
   ),
-  credits: Schema_CreditCost.meta({
-    description:
-      'Deprecated: use total_credit_cost, which always has the same value. This field will be removed in a future version.',
-    deprecated: true,
-  }).optional(),
-  screenshot_slices: Schema_CreditCost.meta({
-    description:
-      'Deprecated: use screenshot_slicing_credit_cost, which always has the same value. Despite its name this is a 0/1 charge, not a count of slices. This field will be removed in a future version.',
-    deprecated: true,
-  }).optional(),
 })
 
 export const Schema_ApiResponseMeta = z.looseObject({
   usage: Schema_ApiUsageMeta.describe(
-    'What this request cost and why: total_credit_cost = engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost, plus the billed engine and the resolved proxy tier.'
+    'What this request cost and why: total_credit_cost = engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost + zero_data_retention_credit_cost, plus the billed engine and the resolved proxy tier.'
   ),
 })
 

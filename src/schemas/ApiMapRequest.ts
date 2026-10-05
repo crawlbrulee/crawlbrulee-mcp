@@ -90,6 +90,12 @@ export const Schema_ApiMapRequest = z.object({
     .default(DEFAULT_API_MAP_PAGE_LIMIT)
     .describe('Number of URLs to return per page. Default 5000, maximum 10000.'),
   location: Schema_ApiMapLocation.optional(),
+  zero_data_retention: z
+    .boolean()
+    .optional()
+    .describe(
+      'Keeps the result out of the shared cache; anything stored to deliver it is kept for 24 hours, then deleted. Adds 1 credit. Must be enabled for your organization. See https://crawlbrulee.com/docs/zero-data-retention.'
+    ),
 })
 
 export type ApiMapRequest = z.infer<typeof Schema_ApiMapRequest>

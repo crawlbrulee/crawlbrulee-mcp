@@ -5,6 +5,7 @@ import {
   CrawlbruleeError,
   RateLimitError,
   ValidationError,
+  ZeroDataRetentionNotEnabledError,
 } from '@crawlbrulee/sdk'
 import type { ApiErrorName } from '@crawlbrulee/sdk'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -105,7 +106,7 @@ describe('MCP server', () => {
         requested_url: 'https://example.com/?ref=test',
         metadata: { title: 'Example Domain' },
         response_meta: {
-          usage: { credits: 1, engine: 'http', proxy: 'basic', screenshot_slices: 0 },
+          usage: { total_credit_cost: 1, engine: 'http', proxy: 'basic' },
         },
       }
       harness.mock.scrape.mockResolvedValueOnce(sdkResponse)
@@ -129,6 +130,94 @@ describe('MCP server', () => {
     })
   })
 
+  describe('zero_data_retention', () => {
+    it('scrape passes the field through and returns the usage field', async () => {
+      const sdkResponse = {
+        url: 'https://example.com',
+        requested_url: 'https://example.com',
+        response_meta: {
+          usage: {
+            total_credit_cost: 6,
+            engine_credit_cost: 1,
+            proxy_multiplier: 5,
+            screenshot_slicing_credit_cost: 0,
+            zero_data_retention_credit_cost: 1,
+            engine: 'http',
+            proxy: 'advanced',
+          },
+        },
+      }
+      harness.mock.scrape.mockResolvedValueOnce(sdkResponse)
+
+      const res = await harness.client.callTool({
+        name: 'scrape',
+        arguments: { url: 'https://example.com', zero_data_retention: true },
+      })
+
+      expect(res.isError).toBeFalsy()
+      const [call] = harness.mock.scrape.mock.calls
+      expect(call?.[0]).toMatchObject({ zero_data_retention: true })
+      expect(res.structuredContent).toEqual(sdkResponse)
+    })
+
+    it('map passes the field through and returns the usage field', async () => {
+      const sdkResponse = {
+        links: [{ url: 'https://example.com/a' }],
+        response_meta: {
+          pagination: { page: 1, limit: 5000, total: 1, total_pages: 1, has_more: false },
+          truncation: {
+            storage_capped: false,
+            response_capped: false,
+            total_before_max_urls: 1,
+            total_detected_before_storage_cap: 1,
+            discovery_capped: false,
+            sitemaps_skipped: 0,
+            discovery_cap_reason: null,
+          },
+          usage: {
+            total_credit_cost: 2,
+            engine_credit_cost: 1,
+            proxy_multiplier: 1,
+            zero_data_retention_credit_cost: 1,
+            engine: 'http',
+            proxy: 'basic',
+          },
+        },
+      }
+      harness.mock.map.mockResolvedValueOnce(sdkResponse)
+
+      const res = await harness.client.callTool({
+        name: 'map',
+        arguments: { url: 'https://example.com', zero_data_retention: true },
+      })
+
+      expect(res.isError).toBeFalsy()
+      const [call] = harness.mock.map.mock.calls
+      expect(call?.[0]).toMatchObject({ zero_data_retention: true })
+      expect(res.structuredContent).toEqual(sdkResponse)
+    })
+
+    it('maps the not-enabled error to a tool error with a next step', async () => {
+      harness.mock.scrape.mockRejectedValueOnce(
+        new ZeroDataRetentionNotEnabledError('not enabled', {
+          status: 403,
+          errorName: 'zero_data_retention_not_enabled',
+        })
+      )
+
+      const res = await harness.client.callTool({
+        name: 'scrape',
+        arguments: { url: 'https://example.com', zero_data_retention: true },
+      })
+
+      expect(res.isError).toBe(true)
+      const text = (res.content as Array<{ text: string }>)[0]?.text ?? ''
+      expect(text).toMatch(
+        /^\[zero_data_retention_not_enabled\] not enabled \(HTTP 403\) .*without/i
+      )
+    })
+  })
+
   describe('scrape_async tool', () => {
     it('forwards the request to scrapeAsync and returns the job_id', async () => {
       harness.mock.scrapeAsync.mockResolvedValueOnce({ job_id: 'job_123' })
@@ -146,6 +235,19 @@ describe('MCP server', () => {
       })
       expect(res.isError).toBeFalsy()
       expect(res.structuredContent).toEqual({ job_id: 'job_123' })
+    })
+
+    it('passes zero_data_retention through to the SDK call', async () => {
+      harness.mock.scrapeAsync.mockResolvedValueOnce({ job_id: 'job_zdr' })
+
+      const res = await harness.client.callTool({
+        name: 'scrape_async',
+        arguments: { url: 'https://example.com', zero_data_retention: true },
+      })
+
+      expect(res.isError).toBeFalsy()
+      const [call] = harness.mock.scrapeAsync.mock.calls
+      expect(call?.[0]).toMatchObject({ zero_data_retention: true })
     })
 
     it('flows webhook.url and webhook.metadata through to the SDK call', async () => {
@@ -228,7 +330,7 @@ describe('MCP server', () => {
         status: 'done',
         created_at: '2026-06-13T00:00:00.000Z',
         response_meta: {
-          usage: { credits: 5, engine: 'http', proxy: 'advanced', screenshot_slices: 0 },
+          usage: { total_credit_cost: 5, engine: 'http', proxy: 'advanced' },
         },
       }
       harness.mock.getScrapeStatus.mockResolvedValueOnce(status)
@@ -250,7 +352,7 @@ describe('MCP server', () => {
         requested_url: 'https://example.com',
         metadata: { title: 'Example Domain' },
         response_meta: {
-          usage: { credits: 0, engine: 'cache', proxy: 'basic', screenshot_slices: 0 },
+          usage: { total_credit_cost: 0, engine: 'cache', proxy: 'basic' },
         },
       }
       harness.mock.getScrapeResult.mockResolvedValueOnce(sdkResponse)
@@ -288,7 +390,7 @@ describe('MCP server', () => {
             sitemaps_skipped: 0,
             discovery_cap_reason: null,
           },
-          usage: { credits: 1, engine: 'http', proxy: 'basic' },
+          usage: { total_credit_cost: 1, engine: 'http', proxy: 'basic' },
         },
       }
       harness.mock.map.mockResolvedValueOnce(sdkResponse)
@@ -322,7 +424,7 @@ describe('MCP server', () => {
             sitemaps_skipped: 2,
             discovery_cap_reason: 'unread_files',
           },
-          usage: { credits: 1, engine: 'http', proxy: 'basic' },
+          usage: { total_credit_cost: 1, engine: 'http', proxy: 'basic' },
         },
       }
       harness.mock.map.mockResolvedValueOnce(sdkResponse)

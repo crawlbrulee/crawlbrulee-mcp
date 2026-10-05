@@ -85,6 +85,8 @@ function isMissingApiKeyError(err: CrawlbruleeError): boolean {
  * for it yet), so it is matched by name.
  */
 const ERROR_HINTS: Readonly<Record<string, string>> = {
+  zero_data_retention_not_enabled:
+    'Zero data retention is not enabled for this organization. Send the request again without `zero_data_retention`, or ask us to turn it on (sales@crawlbrulee.com). Not billed.',
   target_unreachable:
     'We could not reach the site: it did not answer, took too long, or its certificate was not valid. ' +
     'Retry later or check the URL. Not billed. ' +

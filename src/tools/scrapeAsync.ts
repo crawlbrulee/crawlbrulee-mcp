@@ -17,6 +17,7 @@ const DESCRIPTION = [
   'signed `scrape.complete` POST to your endpoint when the job finishes (HTTPS required',
   'in production), and echoes your opaque `webhook.metadata` back in the delivery',
   '(under `data.metadata`, alongside `data.page_status_code` (on success) and `data.response_meta.usage`).',
+  'Set `zero_data_retention: true` to keep the result out of the shared cache; anything stored to deliver it is kept for 24 hours, then deleted. It adds 1 credit and must be enabled for the organization (else a `zero_data_retention_not_enabled` error, not billed). See https://crawlbrulee.com/docs/zero-data-retention.',
 ].join(' ')
 
 export function registerScrapeAsyncTool(

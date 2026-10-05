@@ -29,29 +29,28 @@ async function setup(): Promise<Harness> {
   return { client, mock }
 }
 
-// Usage as the current api sends it: the price parts first, then the old names
-// (`credits`, `screenshot_slices`), which are deprecated but still sent.
+// Usage as the api sends it: the price parts.
 const usage = () => ({
   total_credit_cost: 1,
   engine_credit_cost: 1,
   proxy_multiplier: 1,
   screenshot_slicing_credit_cost: 0,
+  zero_data_retention_credit_cost: 0,
   engine: 'http',
   proxy: 'basic',
-  credits: 1,
-  screenshot_slices: 0,
 })
 
-// Usage as an older api version sends it: only the old names.
+// Usage as an older api version sends it: only the old names. They are not in the schemas
+// any more, but the output objects are loose, so a response that carries them still validates.
 const oldUsage = () => ({ credits: 1, engine: 'http', proxy: 'basic', screenshot_slices: 0 })
 
 const mapUsage = () => ({
   total_credit_cost: 1,
   engine_credit_cost: 1,
   proxy_multiplier: 1,
+  zero_data_retention_credit_cost: 0,
   engine: 'http',
   proxy: 'basic',
-  credits: 1,
 })
 
 const scrapeResponse = () => ({
@@ -265,8 +264,6 @@ describe('page is data', () => {
         screenshot_slicing_credit_cost: 0,
         engine: 'browser',
         proxy: 'advanced',
-        credits: 15,
-        screenshot_slices: 0,
       },
     },
   })
@@ -296,8 +293,6 @@ describe('page is data', () => {
           screenshot_slicing_credit_cost: 0,
           engine: 'http',
           proxy: 'basic',
-          credits: 0,
-          screenshot_slices: 0,
         },
       },
     }
@@ -355,9 +350,11 @@ describe('page is data', () => {
       response_meta: { usage: oldUsage() },
     })
     const oldMap = mapResponse()
-    oldMap.response_meta.usage = { credits: 1, engine: 'http', proxy: 'basic' } as ReturnType<
-      typeof mapUsage
-    >
+    oldMap.response_meta.usage = {
+      credits: 1,
+      engine: 'http',
+      proxy: 'basic',
+    } as unknown as ReturnType<typeof mapUsage>
     h.mock.map.mockResolvedValueOnce(oldMap)
 
     const results = await Promise.all([
@@ -371,14 +368,14 @@ describe('page is data', () => {
     expect(results[0]?.structuredContent).toEqual(oldScrape)
   })
 
-  it('accepts usage without the deprecated fields, for when the api drops them', async () => {
-    const { credits: _c, screenshot_slices: _s, ...newOnly } = usage()
-    const { credits: _m, ...newOnlyMap } = mapUsage()
-    h.mock.scrape.mockResolvedValueOnce({ ...scrapeResponse(), response_meta: { usage: newOnly } })
+  it('still accepts usage that carries the old names next to the new ones', async () => {
+    const withOld = { ...usage(), credits: 1, screenshot_slices: 0 }
+    const withOldMap = { ...mapUsage(), credits: 1 }
+    h.mock.scrape.mockResolvedValueOnce({ ...scrapeResponse(), response_meta: { usage: withOld } })
     const laterMap = mapResponse()
     h.mock.map.mockResolvedValueOnce({
       ...laterMap,
-      response_meta: { ...laterMap.response_meta, usage: newOnlyMap },
+      response_meta: { ...laterMap.response_meta, usage: withOldMap },
     })
 
     const results = await Promise.all([
@@ -387,6 +384,10 @@ describe('page is data', () => {
     ])
 
     for (const res of results) expect(res.isError).toBeFalsy()
+    expect(results[0]?.structuredContent).toEqual({
+      ...scrapeResponse(),
+      response_meta: { usage: withOld },
+    })
   })
 
   it('documents page_status_code and the new usage fields in the output schemas', async () => {
@@ -409,34 +410,21 @@ describe('page is data', () => {
       'engine_credit_cost',
       'proxy_multiplier',
       'screenshot_slicing_credit_cost',
+      'zero_data_retention_credit_cost',
     ]) {
       expect(text).toContain(field)
     }
     expect(JSON.stringify(byName.map?.outputSchema)).toContain('total_credit_cost')
+    expect(JSON.stringify(byName.map?.outputSchema)).toContain('zero_data_retention_credit_cost')
     expect(JSON.stringify(byName.map?.outputSchema)).not.toContain('screenshot_slicing_credit_cost')
   })
 
-  it('marks credits and screenshot_slices as deprecated', async () => {
+  it('no longer documents credits and screenshot_slices in the output schemas', async () => {
     const { tools } = await h.client.listTools()
-    const scrape = tools.find(t => t.name === 'scrape')?.outputSchema as unknown as {
-      properties: {
-        response_meta: {
-          properties: {
-            usage: { properties: Record<string, { description?: string; deprecated?: boolean }> }
-          }
-        }
-      }
-    }
-    const fields = scrape.properties.response_meta.properties.usage.properties
-
-    for (const [old, replacement] of [
-      ['credits', 'total_credit_cost'],
-      ['screenshot_slices', 'screenshot_slicing_credit_cost'],
-    ] as const) {
-      expect(fields[old]?.deprecated).toBe(true)
-      expect(fields[old]?.description).toMatch(/deprecated/i)
-      expect(fields[old]?.description).toContain(replacement)
-      expect(fields[old]?.description).toMatch(/future version/)
+    for (const name of ['scrape', 'scrape_result', 'scrape_status', 'scrape_async', 'map']) {
+      const text = JSON.stringify(tools.find(t => t.name === name)?.outputSchema ?? {})
+      expect(text).not.toContain('"credits"')
+      expect(text).not.toContain('screenshot_slices')
     }
   })
 

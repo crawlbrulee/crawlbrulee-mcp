@@ -4,6 +4,21 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 1.2.0 (2026-10-05)
+
+### added
+
+- **zero data retention.** `zero_data_retention` on `scrape`, `scrape_async` and `map`, `zero_data_retention_credit_cost` in `response_meta.usage`, and a clear tool error for `zero_data_retention_not_enabled` (HTTP 403). it keeps the result out of the shared cache and must be enabled for your organization. see [zero data retention](https://crawlbrulee.com/docs/zero-data-retention).
+- the totals in the tool descriptions and output schemas now include it: `total_credit_cost = engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost + zero_data_retention_credit_cost` for `scrape`, and the same without slicing for `map`.
+
+### removed
+
+- the deprecated `credits` and `screenshot_slices` in `response_meta.usage` are gone from the output schemas, tool descriptions and docs. use `total_credit_cost` and `screenshot_slicing_credit_cost`. the schemas are loose, so a response that still carries the old names is accepted.
+
+### changed
+
+- requires `@crawlbrulee/sdk` `^1.2.0`.
+
 ## 1.1.0 (2026-09-30)
 
 ### added

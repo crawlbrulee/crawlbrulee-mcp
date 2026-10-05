@@ -3,6 +3,7 @@ import {
   CrawlbruleeError,
   ENV_API_KEY,
   RateLimitError,
+  ZeroDataRetentionNotEnabledError,
 } from '@crawlbrulee/sdk'
 import type { ApiErrorName } from '@crawlbrulee/sdk'
 import { describe, expect, it } from 'vitest'
@@ -45,6 +46,19 @@ describe('toToolError', () => {
     expect(text).toMatch(/^\[target_unreachable\] Could not reach the target site\. \(HTTP 502\)/)
     expect(text).toMatch(/retry later/i)
     expect(text).toMatch(/check the url/i)
+    expect(text).toMatch(/not billed/i)
+  })
+
+  it('explains zero_data_retention_not_enabled for both cases: asked for it, or not', () => {
+    const err = new ZeroDataRetentionNotEnabledError(
+      'zero_data_retention is not enabled for your organization. Contact us to turn it on.',
+      { status: 403, errorName: 'zero_data_retention_not_enabled' }
+    )
+    const text = extractText(toToolError(err))
+    expect(text).toMatch(/^\[zero_data_retention_not_enabled\] .* \(HTTP 403\)/)
+    expect(text).toMatch(/not enabled for this organization/i)
+    expect(text).toMatch(/again without `zero_data_retention`/i)
+    expect(text).toMatch(/turn it on/i)
     expect(text).toMatch(/not billed/i)
   })
 
