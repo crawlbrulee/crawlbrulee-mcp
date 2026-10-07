@@ -62,3 +62,20 @@ own definitions and they are adjusted by hand when the api changes.
 
 This is maintainer context — keep it out of the README, which is the public, customer-facing
 surface for this package.
+
+## releasing
+
+a release is a `vX.Y.Z` tag pushed on a commit that is already on `main`. the publish
+workflow refuses a tag whose commit is not on `origin/main` or whose version doesn't match
+`package.json`, runs the checks, publishes with trusted publishing (no tokens anywhere) and
+creates the GitHub release.
+
+- bump the version in every place it lives: `package.json`, both `version` fields in `server.json`, and `SERVER_VERSION` in `src/version.ts`.
+- add a dated `CHANGELOG.md` entry. a version that is already published is final: later
+  changes get a new version, never an edit to the old entry. check the registry, not local
+  tags, to see what is out.
+- CI installs with `--frozen-lockfile`. after a new `@crawlbrulee/sdk` is on npm, raise the
+  range in `package.json` and run `pnpm install` to refresh `pnpm-lock.yaml` before you tag.
+- the official MCP registry is a separate step: once the npm publish has finished, run the
+  `Publish to MCP Registry` workflow by hand (`gh workflow run "Publish to MCP Registry" --ref main`).
+  the registry checks the npm package for the same `mcpName`.
