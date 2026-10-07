@@ -18,7 +18,8 @@ const DESCRIPTION = [
   'billed; retry later or check the url. Poll this until the status is',
   '`done`, then call `scrape_result` to fetch',
   'the page. If you registered a completion webhook on submit you can skip polling and react',
-  'to the delivery instead.',
+  'to the delivery instead. A job answers for 24 hours after it was submitted; after that this',
+  'returns `not_found`, the same as for an unknown job id.',
 ].join(' ')
 
 export function registerScrapeStatusTool(

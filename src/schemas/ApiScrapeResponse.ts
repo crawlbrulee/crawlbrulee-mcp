@@ -20,13 +20,21 @@ export const Schema_ApiScreenshotProperties = z.looseObject({
 
 export const Schema_ApiScreenshotSlice = z.looseObject({
   row_nr: z.number().describe('Row index of this slice (0-based)'),
-  url: z.string().describe('URL to download this slice image'),
+  url: z
+    .string()
+    .describe(
+      'Signed link to download this slice image. It expires 24 hours after the scrape (for an async scrape, 24 hours after you submitted it). Download the image, do not keep the link'
+    ),
   type: z.literal('slice').describe('Slice type identifier'),
   properties: Schema_ApiScreenshotProperties.describe('Image properties for this slice'),
 })
 
 export const Schema_ApiScreenshotResponse = z.looseObject({
-  url: z.string().describe('URL to download the full screenshot image'),
+  url: z
+    .string()
+    .describe(
+      'Signed link to download the full screenshot image. It expires 24 hours after the scrape (for an async scrape, 24 hours after you submitted it). Download the image, do not keep the link'
+    ),
   // Same values as the request's screenshot type, but open: see openEnum.
   type: openEnum(['viewport', 'full_page']).describe('Screenshot capture mode that was used'),
   properties: Schema_ApiScreenshotProperties.describe('Image properties for the full screenshot'),

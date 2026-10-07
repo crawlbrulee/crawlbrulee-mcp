@@ -240,29 +240,29 @@ a few codes add a short next step after that, e.g. `target_unreachable` and `zer
 
 agents can branch on the `errorName` code. the set comes from the sdk's `ApiErrorName` union plus two synthetic codes added by this mcp (`missing_api_key`, `internal_error`):
 
-| code                              | meaning                                                                                       |
-| --------------------------------- | --------------------------------------------------------------------------------------------- |
-| `missing_api_key`                 | `CRAWLBRULEE_API_KEY` is not set in the mcp host's env.                                       |
-| `invalid_credentials`             | server rejected the api key (revoked, wrong env, etc.).                                       |
-| `service_unavailable`             | temporary backend failure (HTTP 503). your key is fine — retry with backoff.                  |
-| `too_many_requests`               | rate limit hit — back off and retry.                                                          |
-| `usage_allocation_error`          | plan credit / concurrency cap exceeded. show `usage` to user.                                 |
-| `validation_error`                | input failed server validation.                                                               |
-| `invalid_url`                     | target url was rejected before fetching.                                                      |
-| `blocked_url`                     | target url is on the blocklist.                                                               |
-| `antibot_blocked`                 | origin's anti-bot defenses blocked the fetch.                                                 |
-| `too_many_redirects`              | origin redirected the fetch in a loop (HTTP 422). the target's doing — don't retry blindly.   |
-| `page_too_large`                  | the page's html was too large to process (HTTP 422). terminal — never retry it.               |
-| `target_unreachable`              | we could not reach the site at all (HTTP 502). not billed. retry later or check the url.      |
-| `zero_data_retention_not_enabled` | `zero_data_retention` is not enabled for your organization (HTTP 403). not billed.            |
-| `scrape_error`                    | the scrape could not be completed. a page the site served, even a 404, is never this error.   |
-| `unsupported_screenshot_output`   | screenshot-only request on a content type that can't be screenshotted (HTTP 422). not billed. |
-| `not_found`                       | async job ID unknown (e.g. bad `job_id` to `scrape_status` / `scrape_result`).                |
-| `request_timeout`                 | network / read timeout. safe to retry.                                                        |
-| `client_closed_request`           | caller cancelled before completion.                                                           |
-| `internal_server_error`           | unhandled server-side failure.                                                                |
-| `crawlbrulee_error`               | sdk error without a typed name.                                                               |
-| `internal_error`                  | bug in this mcp — please open an issue.                                                       |
+| code                              | meaning                                                                                        |
+| --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `missing_api_key`                 | `CRAWLBRULEE_API_KEY` is not set in the mcp host's env.                                        |
+| `invalid_credentials`             | server rejected the api key (revoked, wrong env, etc.).                                        |
+| `service_unavailable`             | temporary backend failure (HTTP 503). your key is fine — retry with backoff.                   |
+| `too_many_requests`               | rate limit hit — back off and retry.                                                           |
+| `usage_allocation_error`          | plan credit / concurrency cap exceeded. show `usage` to user.                                  |
+| `validation_error`                | input failed server validation.                                                                |
+| `invalid_url`                     | target url was rejected before fetching.                                                       |
+| `blocked_url`                     | target url is on the blocklist.                                                                |
+| `antibot_blocked`                 | origin's anti-bot defenses blocked the fetch.                                                  |
+| `too_many_redirects`              | origin redirected the fetch in a loop (HTTP 422). the target's doing — don't retry blindly.    |
+| `page_too_large`                  | the page's html was too large to process (HTTP 422). terminal — never retry it.                |
+| `target_unreachable`              | we could not reach the site at all (HTTP 502). not billed. retry later or check the url.       |
+| `zero_data_retention_not_enabled` | `zero_data_retention` is not enabled for your organization (HTTP 403). not billed.             |
+| `scrape_error`                    | the scrape could not be completed. a page the site served, even a 404, is never this error.    |
+| `unsupported_screenshot_output`   | screenshot-only request on a content type that can't be screenshotted (HTTP 422). not billed.  |
+| `not_found`                       | async job ID unknown, or submitted more than 24 hours ago (`scrape_status` / `scrape_result`). |
+| `request_timeout`                 | network / read timeout. safe to retry.                                                         |
+| `client_closed_request`           | caller cancelled before completion.                                                            |
+| `internal_server_error`           | unhandled server-side failure.                                                                 |
+| `crawlbrulee_error`               | sdk error without a typed name.                                                                |
+| `internal_error`                  | bug in this mcp — please open an issue.                                                        |
 
 the api docs carry the canonical [error reference](https://crawlbrulee.com/docs/errors) — every error name, what causes it, and how to recover.
 

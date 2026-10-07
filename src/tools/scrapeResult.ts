@@ -16,7 +16,9 @@ const DESCRIPTION = [
   '404 or 503 page comes back with its content, not as an error. A 404 means the markdown is the',
   'site\'s "not found" page, not the page you asked for. 2xx and 4xx pages are billed, except 403,',
   '407, 408, 429 and 451; 5xx pages are never billed.',
-  'Screenshot URLs are signed download links.',
+  'A job answers for 24 hours after it was submitted, then returns `not_found`. Screenshot URLs are',
+  'signed download links that expire at the same moment, however late you fetch the result: download',
+  'the image if you need it later.',
 ].join(' ')
 
 export function registerScrapeResultTool(

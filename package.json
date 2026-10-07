@@ -1,6 +1,6 @@
 {
   "name": "@crawlbrulee/mcp",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "mcpName": "io.github.crawlbrulee/mcp",
   "description": "official mcp server for crawlbrulee — EU-native web scraping for AI agents & developers. native scrape and map tools for your agent.",
   "keywords": [
@@ -63,7 +63,7 @@
     "prepublishOnly": "pnpm verify"
   },
   "dependencies": {
-    "@crawlbrulee/sdk": "^1.2.0",
+    "@crawlbrulee/sdk": "^1.2.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^4.0.0"
   },

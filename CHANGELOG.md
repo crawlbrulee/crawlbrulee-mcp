@@ -4,6 +4,13 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 1.2.1 (2026-10-07)
+
+### changed
+
+- the `scrape`, `scrape_status` and `scrape_result` descriptions and the screenshot output schema say that screenshot links are signed and expire 24 hours after the scrape (for an async scrape, 24 hours after it was submitted), and that an async job answers for 24 hours after submit, then returns `not_found`.
+- requires `@crawlbrulee/sdk` `^1.2.1`.
+
 ## 1.2.0 (2026-10-05)
 
 ### added
