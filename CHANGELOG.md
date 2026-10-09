@@ -4,6 +4,12 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## unreleased
+
+### changed
+
+- needs Node.js 22 or later (was 20), the same as `@crawlbrulee/sdk`. Node.js 20 is past its end of life.
+
 ## 1.3.0 (2026-10-09)
 
 ### added
