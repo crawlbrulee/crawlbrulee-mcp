@@ -13,6 +13,7 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 ### changed
 
 - the `scrape` description and output schema now name the `screenshot_unavailable` warning: a screenshot was asked for, but the page came back from the http engine without one. `metadata_truncated` is retired and no longer sent (metadata has no size limit of its own now), so the 2,000,000-character head limit is gone from the descriptions. the readme names `screenshot_unavailable` and drops `metadata_truncated`.
+- requires `@crawlbrulee/sdk` `^1.3.0`.
 
 ## 1.2.1 (2026-10-07)
 

@@ -1,3 +1,4 @@
+import type { ScrapeRequest } from '@crawlbrulee/sdk'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 
 import type { CrawlbruleeClientFactory } from '../client.js'
@@ -52,7 +53,11 @@ export function registerScrapeTool(server: McpServer, getClient: CrawlbruleeClie
       inputSchema: Schema_ApiScrapeRequest.shape,
       outputSchema: Schema_ApiScrapeSuccessResponse,
     },
+    // The input schema has already checked `extract.elements` (no `fields` with
+    // `output`/`attribute`); its local type is looser than the sdk's, hence the cast.
     (args: ApiScrapeRequest) =>
-      runTool(async () => (await getClient().scrape(args)) as ApiScrapeSuccessResponse)
+      runTool(
+        async () => (await getClient().scrape(args as ScrapeRequest)) as ApiScrapeSuccessResponse
+      )
   )
 }
