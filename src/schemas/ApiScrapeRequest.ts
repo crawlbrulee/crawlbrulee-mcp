@@ -80,7 +80,12 @@ export const Schema_ApiScrapeExtract = z
       .boolean()
       .default(true)
       .describe('Extract page metadata (title, description, OG tags, etc.) from the page head'),
-    cleaned_html: z.boolean().default(true).describe('Extract cleaned HTML (main content only)'),
+    cleaned_html: z
+      .boolean()
+      .default(true)
+      .describe(
+        'Extract cleaned HTML: the page body with scripts, styles, ads and cookie banners removed'
+      ),
     markdown: z.boolean().default(false).describe('Extract page content as clean Markdown'),
     raw_html: z
       .boolean()
