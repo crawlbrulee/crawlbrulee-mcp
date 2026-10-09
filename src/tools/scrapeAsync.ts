@@ -13,6 +13,8 @@ const DESCRIPTION = [
   '(heavy JS rendering, full-page screenshots of long pages) — for a quick one-shot',
   'fetch prefer the synchronous `scrape` tool, which blocks and returns the page directly.',
   'Poll the job with `scrape_status` and fetch the page with `scrape_result` once done.',
+  'Takes `extract.elements` like `scrape` (named values by CSS selector, no extra credits); the',
+  'result carries them in `elements`. Rules: https://crawlbrulee.com/docs/scrape/elements.',
   'Optionally attach a per-job completion `webhook`: we deliver a single',
   'signed `scrape.complete` POST to your endpoint when the job finishes (HTTPS required',
   'in production), and echoes your opaque `webhook.metadata` back in the delivery',

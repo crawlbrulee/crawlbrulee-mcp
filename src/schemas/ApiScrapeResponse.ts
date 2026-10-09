@@ -3,6 +3,7 @@
 
 import { z } from 'zod'
 import { openEnum } from './openEnum.js'
+import { Schema_ScrapeElementValues } from './ScrapeElementsSchemas.js'
 
 export const Schema_ApiViewport = z.looseObject({
   width: z.number().describe('Viewport width in pixels'),
@@ -158,6 +159,13 @@ export const Schema_ApiScrapeSuccessResponse = z.looseObject({
   markdown: z.string().optional().describe('Page content converted to clean Markdown'),
   cleaned_html: z.string().optional().describe('Cleaned HTML of the main page content'),
   raw_html: z.string().optional().describe('Raw, unprocessed HTML of the page'),
+  elements: Schema_ScrapeElementValues.optional().describe(
+    'The values asked for in `extract.elements`, under the same names. Each name is a ' +
+      'string, an object (a spec with `fields`), a list of either (`all: true`), or null ' +
+      'when nothing matched (`[]` with `all: true`). An object holds its field names with ' +
+      'the same kinds of values, nested up to 3 levels. Every requested name is always ' +
+      'present, at every level of `fields`.'
+  ),
   images: z
     .array(Schema_ApiPageInlineImgItem)
     .optional()
@@ -173,7 +181,7 @@ export const Schema_ApiScrapeSuccessResponse = z.looseObject({
     .array(z.string())
     .optional()
     .describe(
-      'Non-error notices about the scrape. Truncation codes — `screenshot_truncated` (long page exceeded the scrolling-screenshot height cap), `links_truncated` / `inline_images_truncated` (page had more links/images than the per-page extraction caps), `raw_html_truncated` / `metadata_truncated` (rendered HTML exceeded the per-page size budget) — mean the field is present but capped. Unavailability codes — `links_unavailable` / `inline_images_unavailable` / `metadata_unavailable` — mean that optional field could not be extracted and was omitted (null/empty) while the rest of the scrape succeeded, so an empty field carrying one of these does NOT mean the page had none. Stable string codes — clients can switch on them. Warnings are stored with the result: async result fetches and cache hits carry them too, filtered to the fields the request asked for.'
+      'Non-error notices about the scrape. Truncation codes — `screenshot_truncated` (long page exceeded the scrolling-screenshot height cap), `links_truncated` / `inline_images_truncated` (page had more links/images than the per-page extraction caps), `raw_html_truncated` (rendered HTML exceeded the per-page size budget) — mean the field is present but capped. `elements_truncated` means at least one `elements` value hit a limit: a list was cut at 1,000 matches, the request reached 10,000 matches in total, or a value did not fit the ~1 MB of values allowed per request (that value is then null, never cut short). Unavailability codes — `links_unavailable` / `inline_images_unavailable` / `metadata_unavailable` — mean that optional field could not be extracted and was omitted (null/empty) while the rest of the scrape succeeded, so an empty field carrying one of these does NOT mean the page had none. `screenshot_unavailable` means a screenshot was asked for, but the page came back from the http engine without one. Stable string codes — clients can switch on them. Warnings are stored with the result: async result fetches and cache hits carry them too, filtered to the fields the request asked for. `metadata_truncated` is retired and no longer sent: metadata has no size limit of its own now, though the code can still appear on results stored before that change.'
     ),
   response_meta: Schema_ApiResponseMeta.describe(
     'Request-level metadata. `response_meta.usage` reports what the request cost (total_credit_cost and its parts), the billed engine and the resolved proxy tier.'

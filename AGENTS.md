@@ -51,6 +51,13 @@ public list is" as the only thing expressible here.
   `proxy_multiplier` is an open `z.number().int().positive()`, not canonical's `1 | 5` literal union,
   for the same reason as `openEnum`. The old names `credits` / `screenshot_slices` are gone from the
   schemas; the output objects are loose, so a response that still carries them validates.
+- **`extract.elements`** (`ScrapeElementsSchemas.ts`) mirrors canonical's `ScrapeElements*` shape and
+  the public per-string limits only. The 50-selector total, the CSS syntax check and the element
+  name length (1–100 characters, not in the public spec) are left to the api (a clear 400). The
+  response is looser than canonical: `elements` is a record keyed by name, but each value is
+  `z.unknown()`. Canonical's value shape (a string, null, a record or a list, nested 3 levels)
+  lives only in the field description. A strict value would fail the whole tool call on one value
+  the schema does not expect. Do not re-copy canonical's value schema.
 
 The public list is mirrored by hand from `PUBLIC_API_PROXY_TIER_VALUES` in
 `crawlbrulee/packages/core/src/model/common/ApiScrapeRequest.ts` (it cannot be imported here

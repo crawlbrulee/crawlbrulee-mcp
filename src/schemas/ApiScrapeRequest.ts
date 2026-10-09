@@ -4,6 +4,7 @@ import {
   MAX_SCRAPE_SCREENSHOT_ACTIONS_BEFORE,
 } from './ScrapeScreenshotRules.js'
 import { DEFAULT_SCRAPE_CLEANUP, Schema_ApiScrapeCleanup } from './ScrapeCleanupSchemas.js'
+import { ELEMENTS_DOCS_URL, Schema_ScrapeElements } from './ScrapeElementsSchemas.js'
 import {
   Schema_ApiScrapeScreenshotType,
   Schema_ScrapeScreenshotAfterAction,
@@ -78,9 +79,7 @@ export const Schema_ApiScrapeExtract = z
     metadata: z
       .boolean()
       .default(true)
-      .describe(
-        'Extract page metadata (title, description, OG tags, etc.). Read from the page head, which is capped at 2,000,000 characters — a larger head is truncated and the response carries a `metadata_truncated` warning.'
-      ),
+      .describe('Extract page metadata (title, description, OG tags, etc.) from the page head'),
     cleaned_html: z.boolean().default(true).describe('Extract cleaned HTML (main content only)'),
     markdown: z.boolean().default(false).describe('Extract page content as clean Markdown'),
     raw_html: z
@@ -103,6 +102,17 @@ export const Schema_ApiScrapeExtract = z
       ),
     screenshot: Schema_ApiScrapeFormatScreenshot.optional().describe(
       'Capture a screenshot of the page'
+    ),
+    elements: Schema_ScrapeElements.optional().describe(
+      'Named values to read from the page by CSS selector, returned in the top-level ' +
+        '`elements` field under the same names. Each value is either a selector string ' +
+        '(the text of the first match) or an object with `selector`, `output`, `attribute` ' +
+        'and `all`. `fields` (instead of `output`) turns each match into an object of named ' +
+        'values read inside that match only, so a list of product cards can return a title, ' +
+        'price and url per card. A name with no match is null, or [] with `all: true`. Read ' +
+        'after cleanup; `<script>` and `<style>` tags are not part of it. An invalid selector ' +
+        'is a 400. No extra credits, also when the page comes from cache. Limits and selector ' +
+        `rules: ${ELEMENTS_DOCS_URL}.`
     ),
   })
   .strict()

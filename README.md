@@ -91,6 +91,33 @@ html, raw html, links, images, screenshot, page metadata).
 
 `zero_data_retention` (boolean, default `false`) keeps the result out of the shared cache; anything stored to deliver it is kept for 24 hours, then deleted. it adds 1 credit and must be enabled for your organization. `scrape_async` takes it too. see [zero data retention](https://crawlbrulee.com/docs/zero-data-retention).
 
+**named values with `extract.elements`.** to pull a few values from a page — prices, titles, links — give each one a name and a CSS selector, instead of reading the whole markdown. they come back in `elements` under the same names. `all: true` returns every match as a list, and `fields` reads named values inside each match. it costs no extra credits. `scrape_async` takes it too.
+
+```jsonc
+{
+  "url": "https://books.toscrape.com/",
+  "extract": {
+    "elements": {
+      "heading": "h1",
+      "books": {
+        "selector": "article.product_pod",
+        "all": true,
+        "fields": {
+          "title": { "selector": "h3 a", "output": "attribute", "attribute": "title" },
+          "price": ".price_color",
+        },
+      },
+    },
+  },
+}
+// → "elements": {
+//     "heading": "All products",
+//     "books": [{ "title": "A Light in the Attic", "price": "£51.77" }, ...]
+//   }
+```
+
+a name with no match is `null` (or `[]` with `all: true`). limits and selector rules: see [elements](https://crawlbrulee.com/docs/scrape/elements).
+
 **output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is simply left out while the rest is still returned — but a screenshot-only call that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. the result also carries `page_status_code` and a top-level `response_meta.usage` block:
 
 ```jsonc
@@ -125,9 +152,11 @@ alongside `response_meta.usage`, the result surfaces any non-fatal `warnings` �
 | `links_truncated`         | the page had more than 30,000 links; the `links` array is cut at the cap and is incomplete.           |
 | `inline_images_truncated` | the page had more than 10,000 inline images; the `images` array is cut at the cap and is incomplete.  |
 | `raw_html_truncated`      | the page body exceeded 10,000,000 characters; `raw_html` is cut at a tag boundary, never mid-tag.     |
-| `metadata_truncated`      | the page head exceeded 2,000,000 characters; `metadata` can be missing tags that sat past the cut.    |
+| `elements_truncated`      | an `elements` value hit a limit; see [elements](https://crawlbrulee.com/docs/scrape/elements).        |
 
-and if you requested an extract that doesn't apply to the content type (e.g. `markdown` of a pdf), the field name comes back in an `unsupported_fields` list — with the rest of the payload still returned.
+one more code is not about size: `screenshot_unavailable` means a screenshot was asked for, but the page came back from the http engine without one. the rest of the result is still there.
+
+and if you requested an extract that doesn't apply to the content type (e.g. `metadata` of a JSON file), the field name comes back in an `unsupported_fields` list — with the rest of the payload still returned.
 
 every input field, its default, and its constraints are documented under the [scrape endpoint](https://crawlbrulee.com/docs/scrape) — with [extraction](https://crawlbrulee.com/docs/scrape/extraction), [screenshots](https://crawlbrulee.com/docs/scrape/screenshots), [proxies & location](https://crawlbrulee.com/docs/proxies), and [caching](https://crawlbrulee.com/docs/scrape/caching) covering the individual blocks.
 
@@ -168,7 +197,7 @@ look up the current lifecycle status of an async job: `pending`, `running`, `don
 
 ### `scrape_result`
 
-fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool (including `page_status_code`, `metadata` and `response_meta.usage`). errors if the job is still `pending`/`running`, so check `scrape_status` first.
+fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool (including `page_status_code`, `metadata`, `elements` and `response_meta.usage`). errors if the job is still `pending`/`running`, so check `scrape_status` first.
 
 ```jsonc
 { "job_id": "..." }

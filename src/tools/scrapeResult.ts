@@ -9,8 +9,9 @@ import type { ApiScrapeSuccessResponse, AsyncJobId } from '../schemas/index.js'
 const DESCRIPTION = [
   'Fetch the extracted content of a completed async scrape job (the same result shape as the',
   'synchronous `scrape` tool: markdown, cleaned HTML, raw HTML, links, images, screenshot,',
-  'page metadata in `metadata`, and `response_meta.usage`). Errors if the job is still',
-  '`pending`/`running` — check `scrape_status` first (status `done`) before calling this.',
+  'page metadata in `metadata`, values from `extract.elements` in `elements`, and',
+  '`response_meta.usage`). Errors if the job is still `pending`/`running` — check',
+  '`scrape_status` first (status `done`) before calling this.',
   'Check `page_status_code` before you trust the content: it is the HTTP status the site answered',
   'with for the final page. A page the site served is a successful result whatever its status, so a',
   '404 or 503 page comes back with its content, not as an error. A 404 means the markdown is the',

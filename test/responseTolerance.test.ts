@@ -229,6 +229,44 @@ describe('structured output tolerates api growth', () => {
     for (const res of results) expect(res.isError).toBeFalsy()
   })
 
+  it.each([
+    ['scrape', 'scrape', { url: 'https://example.com' }],
+    ['scrape_result', 'getScrapeResult', { job_id: 'job_1' }],
+  ] as const)(
+    '%s accepts elements values of a shape it does not know yet',
+    async (tool, method, args) => {
+      const body = {
+        ...scrapeResponse(),
+        markdown: '# Example',
+        elements: {
+          a: [null],
+          price: 51.77,
+          deep: { a: { b: { c: { d: 'past 3 levels' } } } },
+        },
+      }
+      h.mock[method].mockResolvedValueOnce(body)
+
+      const res = await h.client.callTool({ name: tool, arguments: args })
+
+      expect(res.isError).toBeFalsy()
+      expect(res.structuredContent).toEqual(body)
+    }
+  )
+
+  it('accepts the screenshot_unavailable warning and the retired metadata_truncated', async () => {
+    h.mock.scrape.mockResolvedValueOnce({
+      ...scrapeResponse(),
+      warnings: ['screenshot_unavailable', 'metadata_truncated'],
+    })
+
+    const res = await h.client.callTool({
+      name: 'scrape',
+      arguments: { url: 'https://example.com' },
+    })
+
+    expect(res.isError).toBeFalsy()
+  })
+
   it('still rejects unknown keys in tool input', async () => {
     const res = await h.client.callTool({
       name: 'scrape',

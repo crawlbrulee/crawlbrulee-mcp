@@ -4,6 +4,16 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 1.3.0 (2026-10-09)
+
+### added
+
+- **`extract.elements` on `scrape` and `scrape_async`.** name the values you want and give each a CSS selector — prices, titles, links — instead of reading the whole page. they come back in a new `elements` field on the `scrape` and `scrape_result` output, under the same names. `all: true` returns every match as a list, and `fields` reads named values inside each match (up to 3 levels). it costs no extra credits. the new `elements_truncated` warning means a value hit a limit. see [elements](https://crawlbrulee.com/docs/scrape/elements).
+
+### changed
+
+- the `scrape` description and output schema now name the `screenshot_unavailable` warning: a screenshot was asked for, but the page came back from the http engine without one. `metadata_truncated` is retired and no longer sent (metadata has no size limit of its own now), so the 2,000,000-character head limit is gone from the descriptions. the readme names `screenshot_unavailable` and drops `metadata_truncated`.
+
 ## 1.2.1 (2026-10-07)
 
 ### changed
