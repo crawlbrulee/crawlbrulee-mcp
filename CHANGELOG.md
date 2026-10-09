@@ -4,10 +4,11 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
-## unreleased
+## 1.3.1 (2026-10-09)
 
 ### changed
 
+- the readme and the `cleaned_html` description in the scrape tool's input schema say what cleanup removes: scripts, styles, ads, popups and cookie banners. the menu and the footer stay unless you exclude them with css selectors. before, they said the menu and the footer were removed too.
 - needs Node.js 22 or later (was 20), the same as `@crawlbrulee/sdk`. Node.js 20 is past its end of life.
 
 ## 1.3.0 (2026-10-09)
