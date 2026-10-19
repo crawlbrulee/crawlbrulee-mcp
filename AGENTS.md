@@ -88,9 +88,10 @@ creates the GitHub release.
   the registry checks the npm package for the same `mcpName`.
 - then move the pin in `crawlbrulee-skills`: its plugin runs one exact version,
   because plugin stores refuse an unpinned launcher. set `@crawlbrulee/mcp` to
-  `X.Y.Z` in its `package.json` and run `npm install --package-lock-only
-  --ignore-scripts` (Claude installs the server from that lockfile and starts it
-  from `node_modules`), change `npx -y @crawlbrulee/mcp@X.Y.Z` in `mcp.json` and
-  `gemini-extension.json` and the version in its readme, then give the skills
-  repo a patch release (all six manifests, changelog), push `main`, then push its
-  `vX.Y.Z` tag; the Gemini gallery only lists tagged repos.
+  `X.Y.Z` in its `package.json`, then refresh the lockfile with
+  `npm install --package-lock-only --ignore-scripts` (Claude installs the server
+  from that lockfile and starts it from `node_modules`). change
+  `npx -y @crawlbrulee/mcp@X.Y.Z` in `mcp.json` and `gemini-extension.json` and
+  the version in its readme, then give the skills repo a patch release (all six
+  manifests, changelog), push `main`, then push its `vX.Y.Z` tag; the Gemini
+  gallery only lists tagged repos.
