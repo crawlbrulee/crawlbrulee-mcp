@@ -4,6 +4,12 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 1.3.2 (2026-10-19)
+
+### changed
+
+- no changes to the server or its tools. the repository now has a `glama.json` file, so the maintainers can manage the server's listing on [Glama](https://glama.ai/mcp/servers/crawlbrulee/crawlbrulee-mcp).
+
 ## 1.3.1 (2026-10-09)
 
 ### changed
