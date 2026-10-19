@@ -95,3 +95,10 @@ creates the GitHub release.
   lockfile with a `node ${CLAUDE_PLUGIN_ROOT}/node_modules/...` launcher there:
   Grok reads Claude's `.mcp.json` but never installs the lockfile (tried in
   skills 1.3.2, reverted in 1.3.3).
+- then change the version by hand on cursor.directory: its listing holds its own
+  copy of the install config, which a skills release does not update. signed in,
+  open https://cursor.directory/plugins/crawlbrulee → "Plugin options" → Edit,
+  set the version in the mcp server's `args`, keep the key as
+  `"${env:CRAWLBRULEE_API_KEY}"`, then "Update Plugin". don't use "Re-scan": it
+  reads Claude's `.mcp.json` and brings back `${user_config.api_key}`, which
+  only Claude Code fills in.
