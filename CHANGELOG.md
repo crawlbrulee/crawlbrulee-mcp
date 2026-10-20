@@ -4,6 +4,16 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 1.3.3 (2026-10-20)
+
+### changed
+
+- dependency updates with security fixes.
+- requires `@modelcontextprotocol/sdk` `^1.32.1` (was `^1.29.0`).
+- the tools, their inputs and their outputs stay the same. the newer `@modelcontextprotocol/sdk` brings two small changes:
+  - when a tool call has bad arguments, the error names each problem in one plain line, like `Invalid input: expected string, received number at url`. before, it was a json list.
+  - a tool that takes no arguments, like `usage` or `whoami`, now also works when the client leaves out `arguments`.
+
 ## 1.3.2 (2026-10-19)
 
 ### changed
