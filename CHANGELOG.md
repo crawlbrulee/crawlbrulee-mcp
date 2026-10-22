@@ -13,6 +13,9 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 - the tools, their inputs and their outputs stay the same. the newer `@modelcontextprotocol/sdk` brings two small changes:
   - when a tool call has bad arguments, the error names each problem in one plain line, like `Invalid input: expected string, received number at url`. before, it was a json list.
   - a tool that takes no arguments, like `usage` or `whoami`, now also works when the client leaves out `arguments`.
+- the `missing_api_key` message says how the user gets a key (sign up if they have no account, no credit card needed, then **tokens** → **create token** in the dashboard), and that they put it in place themselves, never through the chat.
+- `invalid_credentials` errors now end with a short next step: the key is expired, revoked or mistyped, the user creates a new one and replaces it themselves, never through the chat.
+- the readme shows one setup: the key in an environment variable, and the server added with no key in its config. the setup for each client is in the docs: https://crawlbrulee.com/docs/mcp.
 
 ## 1.3.2 (2026-10-19)
 

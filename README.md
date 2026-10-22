@@ -28,33 +28,37 @@ this readme covers the mcp server itself — its tools and how to wire it into a
 
 ## install
 
-```bash
-# Claude Code
-claude mcp add crawlbrulee \
-  --env CRAWLBRULEE_API_KEY=cwbl_... \
-  -- npx -y @crawlbrulee/mcp
+**1. get a key.** if you don't have a crawlbrulee account,
+[sign up](https://dashboard.crawlbrulee.com/auth/register). the free plan needs no credit
+card. then, in the dashboard menu, open **tokens** and click **create token**.
 
-# Cursor — add to ~/.cursor/mcp.json:
-{
-  "mcpServers": {
-    "crawlbrulee": {
-      "command": "npx",
-      "args": ["-y", "@crawlbrulee/mcp"],
-      "env": { "CRAWLBRULEE_API_KEY": "cwbl_..." }
-    }
-  }
-}
+**2. put it in your environment.** add it to your shell profile (for example `~/.zshrc`),
+then open a new terminal and start your agent from it. don't paste the key into your
+agent's chat: anything in the chat stays in its history.
+
+```bash
+export CRAWLBRULEE_API_KEY="cwbl_..."
 ```
 
-the same pattern works for Codex, Claude Desktop, and any other host that
-accepts a stdio mcp launch command — set `command: npx`, `args: ["-y",
-"@crawlbrulee/mcp"]`, and forward `CRAWLBRULEE_API_KEY` via the env block.
+**3. add the server, with no key in its config.** in Claude Code:
+
+```bash
+claude mcp add crawlbrulee -- npx -y @crawlbrulee/mcp
+```
+
+other stdio hosts run the same command: `npx -y @crawlbrulee/mcp`. a few of them (Codex,
+Cursor, Windsurf, Gemini CLI, Claude Desktop) need the key or the variable named in their
+config file, and VS Code and the Claude Code plugin can ask for the key in a masked prompt.
+the file and the entry for each one: [mcp setup in the docs](https://crawlbrulee.com/docs/mcp#install).
+
+if a key stops working (`invalid_credentials`), it's expired, revoked or mistyped: create a
+new one the same way, replace the old one, and start your agent again.
 
 ## configuration
 
-| env var               | required | description                                                                    |
-| --------------------- | -------- | ------------------------------------------------------------------------------ |
-| `CRAWLBRULEE_API_KEY` | yes      | api key sent as `Authorization: Bearer …`. get one at https://crawlbrulee.com. |
+| env var               | required | description                                                                            |
+| --------------------- | -------- | -------------------------------------------------------------------------------------- |
+| `CRAWLBRULEE_API_KEY` | yes      | api key sent as `Authorization: Bearer …`. see [install](#install) for how to get one. |
 
 the mcp reads the env var on first tool invocation — not at startup — so a
 typo in your config surfaces as a clear tool-error message rather than the
@@ -271,8 +275,8 @@ agents can branch on the `errorName` code. the set comes from the sdk's `ApiErro
 
 | code                              | meaning                                                                                        |
 | --------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `missing_api_key`                 | `CRAWLBRULEE_API_KEY` is not set in the mcp host's env.                                        |
-| `invalid_credentials`             | server rejected the api key (revoked, wrong env, etc.).                                        |
+| `missing_api_key`                 | `CRAWLBRULEE_API_KEY` is not set in the mcp host's env. the message says how to get a key.     |
+| `invalid_credentials`             | the api rejected the key: expired, revoked or mistyped. the message says how to get a new one. |
 | `service_unavailable`             | temporary backend failure (HTTP 503). your key is fine — retry with backoff.                   |
 | `too_many_requests`               | rate limit hit — back off and retry.                                                           |
 | `usage_allocation_error`          | plan credit / concurrency cap exceeded. show `usage` to user.                                  |

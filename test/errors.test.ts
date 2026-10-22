@@ -22,7 +22,19 @@ describe('toToolError', () => {
     })
     const out = toToolError(err)
     expect(out.isError).toBe(true)
-    expect(extractText(out)).toBe('[invalid_credentials] bad key (HTTP 401)')
+    // The stable prefix agents branch on stays the same; the hint follows it.
+    expect(extractText(out)).toMatch(/^\[invalid_credentials\] bad key \(HTTP 401\) /)
+  })
+
+  it('tells an agent that the user replaces a rejected key, outside the chat', () => {
+    const err = new AuthenticationError('API token expired', {
+      status: 401,
+      errorName: 'invalid_credentials',
+    })
+    const text = extractText(toToolError(err))
+    expect(text).toContain('the user needs a new one')
+    expect(text).toContain('create token')
+    expect(text).toContain("Don't ask them to paste the key into the chat")
   })
 
   it('formats a rate-limit error (errorName is hardcoded to too_many_requests by the SDK)', () => {
@@ -75,7 +87,12 @@ describe('toToolError', () => {
     const text = extractText(toToolError(err))
     expect(text).toContain('[missing_api_key]')
     expect(text).toContain(ENV_API_KEY)
-    expect(text).toContain('claude mcp add')
+    // the user adds the key outside the chat; the agent must not ask for it there
+    expect(text).toContain('The user needs an API key')
+    expect(text).toContain('auth/register')
+    expect(text).toContain('no credit card')
+    expect(text).toContain('create token')
+    expect(text).toContain("Don't ask them to paste the key into the chat")
   })
 
   it('omits HTTP status when it is 0 (transport-level error with no response)', () => {

@@ -45,9 +45,20 @@ export async function runTool<T>(
   }
 }
 
+// An agent reads these the moment a key is missing or rejected, so they say who acts: the
+// user gets the key and adds it outside the chat. A key pasted into the chat stays in its
+// history.
+const CREATE_KEY_STEPS =
+  `In the crawlbrulee dashboard (https://dashboard.crawlbrulee.com), they open "tokens" in the menu ` +
+  `and click "create token".`
+const USER_ADDS_KEY =
+  `They put the key in place themselves, usually as ${ENV_API_KEY} in their shell profile, ` +
+  `then restart the host. Don't ask them to paste the key into the chat.`
+
 const MISSING_API_KEY_REMEDIATION =
-  `${ENV_API_KEY} is not set on the MCP host. Add --env ${ENV_API_KEY}=cwbl_... to your ` +
-  `"claude mcp add" command (or the equivalent env block in your MCP client config), then restart the host.`
+  `${ENV_API_KEY} is not set on the MCP host. The user needs an API key. If they have no ` +
+  `crawlbrulee account, they sign up at https://dashboard.crawlbrulee.com/auth/register ` +
+  `(the free plan needs no credit card). ${CREATE_KEY_STEPS} ${USER_ADDS_KEY}`
 
 /**
  * Map any thrown value into the MCP tool-error envelope. SDK errors carry
@@ -85,6 +96,11 @@ function isMissingApiKeyError(err: CrawlbruleeError): boolean {
  * for it yet), so it is matched by name.
  */
 const ERROR_HINTS: Readonly<Record<string, string>> = {
+  invalid_credentials:
+    `The API key is expired, revoked or mistyped, so the user needs a new one. ${CREATE_KEY_STEPS} ` +
+    `They replace the old key themselves (in their shell profile or this server's config), then restart the host. ` +
+    `Don't ask them to paste the key into the chat. If the config names an environment ` +
+    `variable instead of the key, the variable may not be set where the host started.`,
   zero_data_retention_not_enabled:
     'Zero data retention is not enabled for this organization. Send the request again without `zero_data_retention`, or ask us to turn it on (sales@crawlbrulee.com). Not billed.',
   target_unreachable:
