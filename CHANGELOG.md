@@ -13,6 +13,11 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 - the `scrape` description and output schema name the new `custom_user_agent` warning: the request set its own `User-Agent` header, which can lower the success rate.
 - the `extract.elements` and `fields` descriptions say that the selector `:scope` reads the match itself, for example the matched element's own `href`.
 
+### changed
+
+- **docs only.** the readme example uses a made-up shop (`shop.example.com`), instead of a scraping sandbox run by another company.
+- depends on `@crawlbrulee/sdk` 1.4.0.
+
 ## 1.3.3 (2026-10-26)
 
 ### changed

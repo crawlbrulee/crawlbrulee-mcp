@@ -31,16 +31,16 @@ async function setup(): Promise<Harness> {
 const DOCS_URL = 'https://crawlbrulee.com/docs/scrape/targeted-extraction'
 
 const booksRequest = () => ({
-  url: 'https://books.toscrape.com/',
+  url: 'https://shop.example.com/books/',
   extract: {
     elements: {
       heading: 'h1',
       books: {
-        selector: 'article.product_pod',
+        selector: 'article.book',
         all: true,
         fields: {
           title: { selector: 'h3 a', output: 'attribute', attribute: 'title' },
-          price: '.price_color',
+          price: '.price',
           url: { selector: 'h3 a', output: 'attribute', attribute: 'href' },
         },
       },
@@ -60,31 +60,31 @@ const usage = () => ({
 })
 
 const booksResponse = () => ({
-  url: 'https://books.toscrape.com/',
-  requested_url: 'https://books.toscrape.com/',
+  url: 'https://shop.example.com/books/',
+  requested_url: 'https://shop.example.com/books/',
   page_status_code: 200,
   content_type: 'text/html',
-  metadata: { title: 'All products | Books to Scrape - Sandbox' },
+  metadata: { title: 'Books | Example Shop' },
   elements: {
-    heading: 'All products',
+    heading: 'Books',
     books: [
       {
-        title: 'A Light in the Attic',
-        price: '£51.77',
-        url: 'https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html',
+        title: 'The Night Garden',
+        price: '€18.90',
+        url: 'https://shop.example.com/books/the-night-garden',
       },
       {
-        title: 'Tipping the Velvet',
-        price: '£53.74',
-        url: 'https://books.toscrape.com/catalogue/tipping-the-velvet_999/index.html',
+        title: 'Salt and Stone',
+        price: '€22.50',
+        url: 'https://shop.example.com/books/salt-and-stone',
       },
       {
-        title: 'Soumission',
-        price: '£50.10',
-        url: 'https://books.toscrape.com/catalogue/soumission_998/index.html',
+        title: 'A Quiet Harbor',
+        price: '€15.00',
+        url: 'https://shop.example.com/books/a-quiet-harbor',
       },
     ],
-    next_page: 'https://books.toscrape.com/catalogue/page-2.html',
+    next_page: 'https://shop.example.com/books/?page=2',
   },
   warnings: [],
   response_meta: { usage: usage() },
@@ -224,7 +224,7 @@ describe('extract.elements', () => {
         page_status_code: 200,
         content_type: 'application/json',
         unsupported_fields: ['metadata', 'elements'],
-        cleaned_html: '{"price":"£51.77"}',
+        cleaned_html: '{"price":"€18.90"}',
         warnings: [],
         response_meta: { usage: usage() },
       }
