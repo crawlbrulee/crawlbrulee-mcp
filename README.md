@@ -120,7 +120,22 @@ html, raw html, links, images, screenshot, page metadata).
 //   }
 ```
 
-a name with no match is `null` (or `[]` with `all: true`). limits and selector rules: see [elements](https://crawlbrulee.com/docs/scrape/elements).
+a name with no match is `null` (or `[]` with `all: true`). limits and selector rules: see [targeted extraction](https://crawlbrulee.com/docs/scrape/targeted-extraction).
+
+**your own headers and cookies with `headers` and `cookies`.** send your own HTTP headers and cookies to the site, for example an `Authorization` header or a fixed `User-Agent` that a site has on its allowlist. headers go only to the origin of `url` (or its https version, for an http url) and cookies only to its host, never to another site on a redirect. up to 10 headers and 20 cookies. a request with headers or cookies never reads from or writes to the cache, and costs the same as a normal fresh scrape. `scrape_async` takes them too.
+
+```jsonc
+{
+  "url": "https://app.example.com/orders",
+  "headers": { "Authorization": "Bearer ...", "X-Tenant-Id": "acme" },
+  "cookies": [{ "name": "session_id", "value": "a1b2c3" }],
+}
+```
+
+> [!WARNING]
+> header and cookie values pass through your chat with the AI, so the AI host may keep them in its history. use short-lived tokens or a test account, and never a password you can't change.
+
+your own `User-Agent` can lower the success rate, and the response then carries the `custom_user_agent` warning. never put secrets in the `User-Agent`. the limits and which headers can't be set: see [headers and cookies](https://crawlbrulee.com/docs/scrape/custom-headers-and-cookies).
 
 **output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is simply left out while the rest is still returned — but a screenshot-only call that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. the result also carries `page_status_code` and a top-level `response_meta.usage` block:
 
@@ -150,15 +165,15 @@ a name with no match is `null` (or `[]` with `all: true`). limits and selector r
 
 alongside `response_meta.usage`, the result surfaces any non-fatal `warnings` — stable string codes an agent can switch on. an outsized page is truncated rather than refused, and the code names which part was cut:
 
-| code                      | what it means for the payload                                                                         |
-| ------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `screenshot_truncated`    | the page was taller than the scrolling-capture height cap; the screenshot covers the top of the page. |
-| `links_truncated`         | the page had more than 30,000 links; the `links` array is cut at the cap and is incomplete.           |
-| `inline_images_truncated` | the page had more than 10,000 inline images; the `images` array is cut at the cap and is incomplete.  |
-| `raw_html_truncated`      | the page body exceeded 10,000,000 characters; `raw_html` is cut at a tag boundary, never mid-tag.     |
-| `elements_truncated`      | an `elements` value hit a limit; see [elements](https://crawlbrulee.com/docs/scrape/elements).        |
+| code                      | what it means for the payload                                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `screenshot_truncated`    | the page was taller than the scrolling-capture height cap; the screenshot covers the top of the page.                |
+| `links_truncated`         | the page had more than 30,000 links; the `links` array is cut at the cap and is incomplete.                          |
+| `inline_images_truncated` | the page had more than 10,000 inline images; the `images` array is cut at the cap and is incomplete.                 |
+| `raw_html_truncated`      | the page body exceeded 10,000,000 characters; `raw_html` is cut at a tag boundary, never mid-tag.                    |
+| `elements_truncated`      | an `elements` value hit a limit; see [targeted extraction](https://crawlbrulee.com/docs/scrape/targeted-extraction). |
 
-one more code is not about size: `screenshot_unavailable` means a screenshot was asked for, but the page came back from the http engine without one. the rest of the result is still there.
+two more codes are not about size. `screenshot_unavailable` means a screenshot was asked for, but the page came back from the http engine without one; the rest of the result is still there. `custom_user_agent` means the request set its own `User-Agent` header; this can lower the success rate.
 
 and if you requested an extract that doesn't apply to the content type (e.g. `metadata` of a JSON file), the field name comes back in an `unsupported_fields` list — with the rest of the payload still returned.
 

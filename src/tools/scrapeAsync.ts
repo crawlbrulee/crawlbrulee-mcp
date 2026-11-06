@@ -5,6 +5,7 @@ import type { CrawlbruleeClientFactory } from '../client.js'
 import { runTool } from '../errors.js'
 import { Schema_ApiScrapeAsyncRequest } from '../schemas/ApiScrapeAsyncRequest.js'
 import { Schema_ApiScrapeAsyncResponse } from '../schemas/ApiScrapeAsyncResponse.js'
+import { HEADERS_AND_COOKIES_TOOL_TEXT } from '../schemas/ScrapeCustomHeadersSchemas.js'
 import type { ApiScrapeAsyncRequest, ApiScrapeAsyncResponse } from '../schemas/index.js'
 
 const DESCRIPTION = [
@@ -14,12 +15,13 @@ const DESCRIPTION = [
   'fetch prefer the synchronous `scrape` tool, which blocks and returns the page directly.',
   'Poll the job with `scrape_status` and fetch the page with `scrape_result` once done.',
   'Takes `extract.elements` like `scrape` (named values by CSS selector, no extra credits); the',
-  'result carries them in `elements`. Rules: https://crawlbrulee.com/docs/scrape/elements.',
+  'result carries them in `elements`. Rules: https://crawlbrulee.com/docs/scrape/targeted-extraction.',
   'Optionally attach a per-job completion `webhook`: we deliver a single',
   'signed `scrape.complete` POST to your endpoint when the job finishes (HTTPS required',
   'in production), and echoes your opaque `webhook.metadata` back in the delivery',
   '(under `data.metadata`, alongside `data.page_status_code` (on success) and `data.response_meta.usage`).',
   'Set `zero_data_retention: true` to keep the result out of the shared cache; anything stored to deliver it is kept for 24 hours, then deleted. It adds 1 credit and must be enabled for the organization (else a `zero_data_retention_not_enabled` error, not billed). See https://crawlbrulee.com/docs/zero-data-retention.',
+  HEADERS_AND_COOKIES_TOOL_TEXT,
 ].join(' ')
 
 export function registerScrapeAsyncTool(

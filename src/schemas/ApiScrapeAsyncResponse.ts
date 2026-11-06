@@ -1,5 +1,4 @@
-// VENDORED from crawlbrulee/packages/core/src/model/common/ApiUsage.ts + ApiScrapeResponse.ts
-// Keep in sync with the canonical source on schema bumps.
+// Mirrors the crawlbrulee api's own schema. Update it by hand when the api changes.
 //
 // Response shapes for the async scrape lifecycle: submit (job_id), status, and
 // the per-job id input used by the status/result tools.

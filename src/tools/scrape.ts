@@ -4,6 +4,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { CrawlbruleeClientFactory } from '../client.js'
 import { runTool } from '../errors.js'
 import { Schema_ApiScrapeRequest } from '../schemas/ApiScrapeRequest.js'
+import { HEADERS_AND_COOKIES_TOOL_TEXT } from '../schemas/ScrapeCustomHeadersSchemas.js'
 import { Schema_ApiScrapeSuccessResponse } from '../schemas/ApiScrapeResponse.js'
 import type { ApiScrapeRequest, ApiScrapeSuccessResponse } from '../schemas/index.js'
 
@@ -13,7 +14,7 @@ const DESCRIPTION = [
   'Use this for one-shot page extraction. For full-site discovery use the `map` tool first.',
   'To pull named values such as prices, titles or links, set `extract.elements` (name → CSS selector)',
   'instead of reading the whole markdown: they come back in `elements`, for no extra credits.',
-  'Rules: https://crawlbrulee.com/docs/scrape/elements.',
+  'Rules: https://crawlbrulee.com/docs/scrape/targeted-extraction.',
   'Check `page_status_code` before you trust the content: it is the HTTP status the site answered',
   'with for the final page. A page the site served is a successful result whatever its status, so a',
   '404 or 503 page comes back with its content, not as an error. A 404 means the markdown is the',
@@ -41,7 +42,9 @@ const DESCRIPTION = [
   'while the rest of the scrape succeeded, so do NOT conclude the page had no links/images/metadata',
   '— re-run the scrape instead. An empty field with no such warning does mean the page had none.',
   '`screenshot_unavailable` means a screenshot was asked for, but the page came back from the http',
-  'engine without one.',
+  'engine without one. `custom_user_agent` means the request set its own `User-Agent` header; this',
+  'can lower the success rate.',
+  HEADERS_AND_COOKIES_TOOL_TEXT,
 ].join(' ')
 
 export function registerScrapeTool(server: McpServer, getClient: CrawlbruleeClientFactory): void {

@@ -1,7 +1,5 @@
-// VENDORED from crawlbrulee/packages/core/src/model/common/ScrapeScreenshotRules.ts
-// Keep in sync with the canonical source on schema bumps. Trimmed to the
-// pieces consumed by the vendored Zod schemas — runtime helpers used only by
-// the server are intentionally left out.
+// Mirrors the crawlbrulee api's own schema. Update it by hand when the api changes.
+// Only the pieces the schemas here use.
 
 export const MAX_SCRAPE_SCREENSHOT_ACTIONS_BEFORE = 5
 export const MAX_SCRAPE_SCREENSHOT_TOTAL_WAIT_MS = 20_000

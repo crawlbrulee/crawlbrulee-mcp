@@ -28,7 +28,7 @@ async function setup(): Promise<Harness> {
   return { client, mock }
 }
 
-const DOCS_URL = 'https://crawlbrulee.com/docs/scrape/elements'
+const DOCS_URL = 'https://crawlbrulee.com/docs/scrape/targeted-extraction'
 
 const booksRequest = () => ({
   url: 'https://books.toscrape.com/',

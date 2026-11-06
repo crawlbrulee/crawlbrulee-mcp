@@ -1,9 +1,8 @@
 import { z } from 'zod'
 
 /**
- * Mirrors `packages/core/src/model/common/ScrapeElements*` in the server repo.
- * Kept in step by hand — this package deliberately does not import from the
- * monorepo. If the server's shape changes, change it here too.
+ * Mirrors the crawlbrulee api's own schema, kept in step by hand: when the
+ * api's shape changes, change it here too.
  *
  * `extract.elements`: named values read from the page by CSS selector. `fields`
  * nests, at most ELEMENT_FIELDS_DEPTH deep. The schemas are built level by level
@@ -14,7 +13,7 @@ import { z } from 'zod'
  * CSS syntax and the name length are left to the api, which answers a clear 400.
  */
 
-export const ELEMENTS_DOCS_URL = 'https://crawlbrulee.com/docs/scrape/elements'
+export const ELEMENTS_DOCS_URL = 'https://crawlbrulee.com/docs/scrape/targeted-extraction'
 
 /** How deep `fields` may nest. The innermost level has no `fields`. */
 export const ELEMENT_FIELDS_DEPTH = 3

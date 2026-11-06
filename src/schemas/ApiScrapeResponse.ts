@@ -1,5 +1,4 @@
-// VENDORED from crawlbrulee/packages/core/src/model/common/ApiUsage.ts + ApiScrapeResponse.ts
-// Keep in sync with the canonical source on schema bumps.
+// Mirrors the crawlbrulee api's own schema. Update it by hand when the api changes.
 
 import { z } from 'zod'
 import { openEnum } from './openEnum.js'
@@ -68,11 +67,11 @@ export const Schema_ApiPageLink = z.looseObject({
 // resolves `auto` to a concrete tier and reports the resolved value here.
 export const API_RESOLVED_PROXY_TIER_VALUES = ['basic', 'advanced'] as const
 
-// Usage parts. Canonical requires them; here they are optional, because older api
-// versions do not send them.
+// Usage parts. The api sends them today; here they are optional, because older api
+// versions do not.
 const Schema_CreditCost = z.number().int().nonnegative()
 
-// Canonical is the literal union 1 | 5. Kept an open number here, like openEnum:
+// The api sends 1 or 5 today. Kept an open number here, like openEnum:
 // a new multiplier on the server must not make a host refuse the whole result.
 export const Schema_ApiProxyMultiplier = z.number().int().positive()
 
@@ -181,7 +180,7 @@ export const Schema_ApiScrapeSuccessResponse = z.looseObject({
     .array(z.string())
     .optional()
     .describe(
-      'Non-error notices about the scrape. Truncation codes — `screenshot_truncated` (long page exceeded the scrolling-screenshot height cap), `links_truncated` / `inline_images_truncated` (page had more links/images than the per-page extraction caps), `raw_html_truncated` (rendered HTML exceeded the per-page size budget) — mean the field is present but capped. `elements_truncated` means at least one `elements` value hit a limit: a list was cut at 1,000 matches, the request reached 10,000 matches in total, or a value did not fit the ~1 MB of values allowed per request (that value is then null, never cut short). Unavailability codes — `links_unavailable` / `inline_images_unavailable` / `metadata_unavailable` — mean that optional field could not be extracted and was omitted (null/empty) while the rest of the scrape succeeded, so an empty field carrying one of these does NOT mean the page had none. `screenshot_unavailable` means a screenshot was asked for, but the page came back from the http engine without one. Stable string codes — clients can switch on them. Warnings are stored with the result: async result fetches and cache hits carry them too, filtered to the fields the request asked for. `metadata_truncated` is retired and no longer sent: metadata has no size limit of its own now, though the code can still appear on results stored before that change.'
+      'Non-error notices about the scrape. Truncation codes — `screenshot_truncated` (long page exceeded the scrolling-screenshot height cap), `links_truncated` / `inline_images_truncated` (page had more links/images than the per-page extraction caps), `raw_html_truncated` (rendered HTML exceeded the per-page size budget) — mean the field is present but capped. `elements_truncated` means at least one `elements` value hit a limit: a list was cut at 1,000 matches, the request reached 10,000 matches in total, or a value did not fit the ~1 MB of values allowed per request (that value is then null, never cut short). Unavailability codes — `links_unavailable` / `inline_images_unavailable` / `metadata_unavailable` — mean that optional field could not be extracted and was omitted (null/empty) while the rest of the scrape succeeded, so an empty field carrying one of these does NOT mean the page had none. `screenshot_unavailable` means a screenshot was asked for, but the page came back from the http engine without one. `custom_user_agent` means the request set its own `User-Agent` header; this can lower the success rate. Stable string codes — clients can switch on them. Warnings are stored with the result: async result fetches and cache hits carry them too, filtered to the fields the request asked for. `metadata_truncated` is retired and no longer sent: metadata has no size limit of its own now, though the code can still appear on results stored before that change.'
     ),
   response_meta: Schema_ApiResponseMeta.describe(
     'Request-level metadata. `response_meta.usage` reports what the request cost (total_credit_cost and its parts), the billed engine and the resolved proxy tier.'

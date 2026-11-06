@@ -4,6 +4,14 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 1.4.0 (unreleased)
+
+### added
+
+- **`headers` and `cookies` on `scrape` and `scrape_async`.** send your own HTTP headers and cookies to the site, for example an `Authorization` header or a fixed `User-Agent` that a site has on its allowlist. headers go only to the origin of `url` (or its https version, for an http url), cookies only to its host. up to 10 headers and 20 cookies. a request with headers or cookies never reads from or writes to the cache. the input schema checks the cookie shape and count; the api checks the rest and names the header or cookie in a 400. see [headers and cookies](https://crawlbrulee.com/docs/scrape/custom-headers-and-cookies).
+- the field and tool descriptions warn that header and cookie values pass through the chat with the AI, so the AI host may keep them in its history: use short-lived tokens or a test account, and never a password you can't change.
+- the `scrape` description and output schema name the new `custom_user_agent` warning: the request set its own `User-Agent` header, which can lower the success rate.
+
 ## 1.3.3 (2026-10-26)
 
 ### changed

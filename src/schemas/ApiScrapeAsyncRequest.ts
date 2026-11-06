@@ -1,5 +1,4 @@
-// VENDORED from crawlbrulee/packages/core/src/model/common/ApiScrapeRequest.ts
-// Keep in sync with the canonical source on schema bumps.
+// Mirrors the crawlbrulee api's own schema. Update it by hand when the api changes.
 //
 // The async submit body is the synchronous scrape request plus an optional
 // per-job completion webhook. The webhook is ASYNC-ONLY: the synchronous

@@ -16,59 +16,20 @@ was cloned on its own. It is also exposed locally as the `crawlbrulee-ecosystem`
 (`.agents/skills/crawlbrulee-ecosystem/`), which agents discover via the
 `.claude/skills` symlink.
 
-## Schema sync
+## schemas
 
-The `src/schemas/*.ts` files are **vendored copies** of the canonical Zod schemas in
-`crawlbrulee/packages/core/src/model/common/Api*.ts`. The ecosystem policy is that
-tool repos do not import the shared subtree. When the canonical schemas change:
+`src/schemas/*.ts` hold this server's request and response schemas, kept in step with the
+public api by hand. responses are loose: every response object is `z.looseObject(...)` and
+every response enum is `openEnum(...)`, so the server keeps working when the api adds a field
+or a value. tools pass the whole output schema to `registerTool()`, never `.shape`. requests
+stay strict. `test/responseTolerance.test.ts` pins this. run `pnpm verify` after any change.
 
-1. Copy the updated `Api*.ts` and supporting `ScrapeScreenshot*.ts` files into `src/schemas/`.
-2. Keep the `// VENDORED from …` banner intact and update the path if the source moved.
-3. Re-apply the known divergences below — a verbatim copy will silently undo them.
-4. Re-run `pnpm verify`.
+## before a commit or release
 
-### Known deliberate divergences from canonical
-
-⚠️ This repo is **public** and its `dist/` ships to npm. Some canonical enums are wider than
-the supported public surface, and the extra members are internal — they must not appear in
-this repo at all: not in an enum, a type, a comment, a doc, or a changelog. Treat "what the
-public list is" as the only thing expressible here.
-
-- **`proxy` request enum** (`ApiScrapeRequest.ts`, `ApiMapRequest.ts`) is exactly
-  `['basic', 'advanced', 'auto']`. Canonical's is wider. **Never widen it on re-sync** — a
-  verbatim copy will silently do so, and tree-shaking does _not_ drop the unused values from
-  the published bundle.
-- **`proxy` response enum** (`ApiScrapeResponse.ts`) is exactly `['basic', 'advanced']`.
-- **Responses are loose, requests are not.** Every response object is `z.looseObject(...)` and every
-  response enum is `openEnum(...)` (`src/schemas/openEnum.ts`: the known values, plus any string).
-  Canonical uses `z.object` / `z.enum`; a verbatim re-copy undoes this, and the published server then
-  breaks the day the api adds a field. Tools pass the **whole** output schema to `registerTool()`,
-  never `.shape` — with `.shape` the MCP SDK wraps it in its own strict object. Request schemas stay
-  strict. `test/responseTolerance.test.ts` pins all of this.
-- **Fields the api added later are optional here.** `page_status_code` and the usage parts
-  (`total_credit_cost`, `engine_credit_cost`, `proxy_multiplier`, `screenshot_slicing_credit_cost`)
-  are required in canonical but `.optional()` here, because older api versions do not send them.
-  `proxy_multiplier` is an open `z.number().int().positive()`, not canonical's `1 | 5` literal union,
-  for the same reason as `openEnum`. The old names `credits` / `screenshot_slices` are gone from the
-  schemas; the output objects are loose, so a response that still carries them validates.
-- **`extract.elements`** (`ScrapeElementsSchemas.ts`) mirrors canonical's `ScrapeElements*` shape and
-  the public per-string limits only. The 50-selector total, the CSS syntax check and the element
-  name length (1–100 characters, not in the public spec) are left to the api (a clear 400). The
-  response is looser than canonical: `elements` is a record keyed by name, but each value is
-  `z.unknown()`. Canonical's value shape (a string, null, a record or a list, nested 3 levels)
-  lives only in the field description. A strict value would fail the whole tool call on one value
-  the schema does not expect. Do not re-copy canonical's value schema.
-
-The public list is mirrored by hand from `PUBLIC_API_PROXY_TIER_VALUES` in
-`crawlbrulee/packages/core/src/model/common/ApiScrapeRequest.ts` (it cannot be imported here
-— vendor policy), and must be updated in lockstep with the JS/Python SDK types and the CLI
-parser. After any schema sync, verify the built bundle exposes only the public tiers.
-
-These copies stay: there is no shared schema package (decided 2026-09-25). Each tool keeps its
-own definitions and they are adjusted by hand when the api changes.
-
-This is maintainer context — keep it out of the README, which is the public, customer-facing
-surface for this package.
+this repository is public, and it has its own maintainer skill. reading that skill is part of
+the pre-commit checks, and of every release. find it through the umbrella `crawlbrulee-ecosystem`
+skill (path above), which names the skill for each repository, then check the change against it
+before you run the tests. it may be absent if this repository was cloned on its own.
 
 ## releasing
 

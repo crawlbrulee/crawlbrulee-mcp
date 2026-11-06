@@ -36,7 +36,7 @@ export function registerScrapeStatusTool(
     },
     (args: AsyncJobId) =>
       // The SDK's `AsyncJobStatusResponse` is snake_case (job_id, created_at),
-      // matching the vendored status schema 1:1, so a direct cast lines the SDK
+      // matching the local status schema 1:1, so a direct cast lines the SDK
       // return type up with the tool's output schema.
       runTool(
         async () => (await getClient().getScrapeStatus(args.job_id)) as ApiScrapeStatusResponse

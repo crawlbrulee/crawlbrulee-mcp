@@ -41,7 +41,7 @@ export function registerMapTool(server: McpServer, getClient: CrawlbruleeClientF
       outputSchema: Schema_ApiMapResult,
     },
     (args: ApiMapRequest) =>
-      // Double cast: the vendored schema above is the wire contract. The SDK's
+      // Double cast: the local schema above is the wire contract. The SDK's
       // MapTruncation type now has discovery_capped / sitemaps_skipped /
       // discovery_cap_reason, so a plain `as ApiMapResult` compiles and the
       // `unknown` step can go in a later release. SDK 0.16.0's reason type lacks

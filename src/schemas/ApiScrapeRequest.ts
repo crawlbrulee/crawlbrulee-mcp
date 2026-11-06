@@ -4,6 +4,16 @@ import {
   MAX_SCRAPE_SCREENSHOT_ACTIONS_BEFORE,
 } from './ScrapeScreenshotRules.js'
 import { DEFAULT_SCRAPE_CLEANUP, Schema_ApiScrapeCleanup } from './ScrapeCleanupSchemas.js'
+import {
+  HEADERS_AND_COOKIES_CHAT_NOTE,
+  HEADERS_AND_COOKIES_DOCS_URL,
+  MAX_SCRAPE_COOKIE_BYTES,
+  MAX_SCRAPE_COOKIES,
+  MAX_SCRAPE_CUSTOM_HEADERS,
+  MAX_SCRAPE_CUSTOM_HEADERS_AND_COOKIES_BYTES,
+  Schema_ScrapeCookies,
+  Schema_ScrapeCustomHeaders,
+} from './ScrapeCustomHeadersSchemas.js'
 import { ELEMENTS_DOCS_URL, Schema_ScrapeElements } from './ScrapeElementsSchemas.js'
 import {
   Schema_ApiScrapeScreenshotType,
@@ -131,7 +141,7 @@ export const Schema_ApiScrapeLocation = z
       .max(35)
       .optional()
       .describe(
-        "BCP-47 locale (2-35 chars, e.g. 'en-US', 'de-DE', 'pt-BR') driving Accept-Language and navigator.language"
+        "BCP-47 locale (2-35 chars, e.g. 'en-US', 'de-DE', 'pt-BR'): the language to ask the site for"
       ),
     country: z
       .string()
@@ -173,6 +183,35 @@ export const Schema_ApiScrapeRequest = z
       .describe(
         'Keeps the result out of the shared cache; anything stored to deliver it is kept for 24 hours, then deleted. Adds 1 credit. Must be enabled for your organization. See https://crawlbrulee.com/docs/zero-data-retention.'
       ),
+    headers: Schema_ScrapeCustomHeaders.optional().describe(
+      'Your own HTTP headers to send to the site with the request, for example ' +
+        '`Authorization`, an api key, or a fixed `User-Agent` that the site has on an ' +
+        'allowlist. Sent only to the origin of `url` (same scheme, host ' +
+        'and port), or to its https version when `url` is http, and not on a redirect to ' +
+        'another origin. ' +
+        `Up to ${MAX_SCRAPE_CUSTOM_HEADERS} headers; headers and cookies together up to ` +
+        `${MAX_SCRAPE_CUSTOM_HEADERS_AND_COOKIES_BYTES} bytes. Values are printable ASCII, ` +
+        'with no space or tab at either end. ' +
+        "Headers a browser doesn't let a web page set can't be set here either (a 400 " +
+        'names the header). Use `cookies` for cookies and `location.locale` for the ' +
+        'language. Never put secrets in the `User-Agent`. Your own `User-Agent` can lower ' +
+        'the success rate, and the response carries the `custom_user_agent` warning. ' +
+        'A `Referer` must be the full http or https url of a public page, with no ' +
+        'username or password; it is sent the way a browser sends it after a click on ' +
+        'that page. A request with headers or cookies never reads from or writes to the ' +
+        'cache. On a plain http url they travel unencrypted. ' +
+        `${HEADERS_AND_COOKIES_CHAT_NOTE} See ${HEADERS_AND_COOKIES_DOCS_URL}.`
+    ),
+    cookies: Schema_ScrapeCookies.optional().describe(
+      'Your own cookies to send to the site with the request. Each is a `name` and a ' +
+        '`value`, sent only to the host of `url`. Cookies the site sets while redirecting ' +
+        `are not kept. Up to ${MAX_SCRAPE_COOKIES} cookies, each up to ` +
+        `${MAX_SCRAPE_COOKIE_BYTES} bytes (name and value), counted toward the limit on ` +
+        '`headers`. A value may not hold ";" or start or end with a space. A `__Secure-`, ' +
+        '`__Host-` or `__Http-` cookie needs an https url. A request with headers or cookies ' +
+        `never reads from or writes to the cache. ${HEADERS_AND_COOKIES_CHAT_NOTE} ` +
+        `See ${HEADERS_AND_COOKIES_DOCS_URL}.`
+    ),
   })
   .strict()
 

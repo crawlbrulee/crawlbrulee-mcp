@@ -1,9 +1,8 @@
 import { z } from 'zod'
 
 /**
- * Mirrors `packages/core/src/model/common/ScrapeCleanup*` in the server repo.
- * Kept in step by hand — this package deliberately does not import from the
- * monorepo. If the server's shape changes, change it here too.
+ * Mirrors the crawlbrulee api's own schema, kept in step by hand: when the
+ * api's shape changes, change it here too.
  */
 export const DEFAULT_SCRAPE_CLEANUP = {
   ads_and_popups: true,
@@ -31,7 +30,7 @@ export const Schema_ApiScrapeCleanup = z
   .strict()
   // ⚠️ `.describe()` goes LAST. Zod's `.extend()` clones a schema without its
   // registry entry, so describing first and extending after silently drops the
-  // text — the same trap the server repo hit.
+  // text.
   .describe(
     'What is removed from the page before any output is built. Applies to markdown, cleaned_html, links and images on every engine, and to the screenshot. Never applies to raw_html, which is always the page before we removed anything.'
   )

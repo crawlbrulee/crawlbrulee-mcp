@@ -1,5 +1,4 @@
-// VENDORED from crawlbrulee/packages/core/src/model/common/ApiUsageResponse.ts
-// Keep in sync with the canonical source on schema bumps.
+// Mirrors the crawlbrulee api's own schema. Update it by hand when the api changes.
 
 import { z } from 'zod'
 
