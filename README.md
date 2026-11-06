@@ -95,7 +95,7 @@ html, raw html, links, images, screenshot, page metadata).
 
 `zero_data_retention` (boolean, default `false`) keeps the result out of the shared cache; anything stored to deliver it is kept for 24 hours, then deleted. it adds 1 credit and must be enabled for your organization. `scrape_async` takes it too. see [zero data retention](https://crawlbrulee.com/docs/zero-data-retention).
 
-**named values with `extract.elements`.** to pull a few values from a page — prices, titles, links — give each one a name and a CSS selector, instead of reading the whole markdown. they come back in `elements` under the same names. `all: true` returns every match as a list, and `fields` reads named values inside each match. it costs no extra credits. `scrape_async` takes it too.
+**named values with `extract.elements`.** to pull a few values from a page — prices, titles, links — give each one a name and a CSS selector, instead of reading the whole markdown. they come back in `elements` under the same names. `all: true` returns every match as a list, and `fields` reads named values inside each match (`:scope` reads the match itself). it costs no extra credits. `scrape_async` takes it too.
 
 ```jsonc
 {

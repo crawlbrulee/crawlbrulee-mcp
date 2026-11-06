@@ -103,7 +103,7 @@ function buildElementsMap(fieldsDepth: number, top = false): z.ZodType<ScrapeEle
             fields: describeTop(
               buildElementsMap(fieldsDepth - 1).optional(),
               top,
-              'Used instead of `output`: turns each match into an object of named values, each read inside that match only. Same shape as `elements`; nests up to 3 levels'
+              'Used instead of `output`: turns each match into an object of named values, each read inside that match; the selector `:scope` reads the match itself. Same shape as `elements`; nests up to 3 levels'
             ),
           }
         : {}),

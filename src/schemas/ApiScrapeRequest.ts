@@ -123,8 +123,9 @@ export const Schema_ApiScrapeExtract = z
         '`elements` field under the same names. Each value is either a selector string ' +
         '(the text of the first match) or an object with `selector`, `output`, `attribute` ' +
         'and `all`. `fields` (instead of `output`) turns each match into an object of named ' +
-        'values read inside that match only, so a list of product cards can return a title, ' +
-        'price and url per card. A name with no match is null, or [] with `all: true`. Read ' +
+        'values read inside that match (the selector `:scope` reads the match itself, for ' +
+        "example the matched element's own href), so a list of products can return a title, " +
+        'price and url per product. A name with no match is null, or [] with `all: true`. Read ' +
         'after cleanup; `<script>` and `<style>` tags are not part of it. An invalid selector ' +
         'is a 400. No extra credits, also when the page comes from cache. Limits and selector ' +
         `rules: ${ELEMENTS_DOCS_URL}.`
