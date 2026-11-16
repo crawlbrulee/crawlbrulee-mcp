@@ -128,6 +128,21 @@ describe('MCP server', () => {
         type: 'text',
       })
     })
+
+    it('a call with no extract asks for markdown + metadata, not cleaned_html', async () => {
+      harness.mock.scrape.mockResolvedValueOnce({
+        url: 'https://example.com',
+        requested_url: 'https://example.com',
+        response_meta: { usage: { total_credit_cost: 1, engine: 'http', proxy: 'basic' } },
+      })
+
+      await harness.client.callTool({ name: 'scrape', arguments: { url: 'https://example.com' } })
+
+      const [call] = harness.mock.scrape.mock.calls
+      expect(call?.[0]).toMatchObject({
+        extract: { metadata: true, markdown: true, cleaned_html: false },
+      })
+    })
   })
 
   describe('zero_data_retention', () => {

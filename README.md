@@ -95,12 +95,14 @@ html, raw html, links, images, screenshot, page metadata).
 
 `zero_data_retention` (boolean, default `false`) keeps the result out of the shared cache; anything stored to deliver it is kept for 24 hours, then deleted. it adds 1 credit and must be enabled for your organization. `scrape_async` takes it too. see [zero data retention](https://crawlbrulee.com/docs/zero-data-retention).
 
-**named values with `extract.elements`.** to pull a few values from a page — prices, titles, links — give each one a name and a CSS selector, instead of reading the whole markdown. they come back in `elements` under the same names. `all: true` returns every match as a list, and `fields` reads named values inside each match (`:scope` reads the match itself). it costs no extra credits. `scrape_async` takes it too.
+**named values with `extract.elements`.** to pull a few values from a page — prices, titles, links — give each one a name and a CSS selector, instead of reading the whole markdown. they come back in `elements` under the same names. `all: true` returns every match as a list, and `fields` reads named values inside each match (`:scope` reads the match itself). markdown and metadata stay on unless you turn them off, as the example does. it costs no extra credits. `scrape_async` takes it too.
 
 ```jsonc
 {
   "url": "https://shop.example.com/books/",
   "extract": {
+    "markdown": false,
+    "metadata": false,
     "elements": {
       "heading": "h1",
       "books": {
@@ -137,7 +139,7 @@ a name with no match is `null` (or `[]` with `all: true`). limits and selector r
 
 your own `User-Agent` can lower the success rate, and the response then carries the `custom_user_agent` warning. never put secrets in the `User-Agent`. the limits and which headers can't be set: see [headers and cookies](https://crawlbrulee.com/docs/scrape/custom-headers-and-cookies).
 
-**output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is simply left out while the rest is still returned — but a screenshot-only call that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. the result also carries `page_status_code` and a top-level `response_meta.usage` block:
+**output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is simply left out while the rest is still returned — but a screenshot-only call (every other format off: `markdown: false` and `metadata: false`, and no `cleaned_html`, `raw_html`, `links`, `images` or `elements`) that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. the result also carries `page_status_code` and a top-level `response_meta.usage` block:
 
 ```jsonc
 {

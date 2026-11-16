@@ -4,6 +4,14 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 1.5.0 (unreleased)
+
+### changed
+
+- **`scrape` and `scrape_async` return markdown by default.** with no `extract`, or with `extract` flags left out, the tools now ask for `markdown` + `metadata`, not `cleaned_html` + `metadata`. set `cleaned_html: true` to get cleaned html too, and `markdown: false` to turn markdown off.
+- the `scrape` description and the readme's `elements` example say to send `markdown: false` and `metadata: false` to get only the values.
+- the readme says what a screenshot-only call is: every other format off, `markdown` and `metadata` included, and no `elements`.
+
 ## 1.4.0 (2026-11-06)
 
 ### added

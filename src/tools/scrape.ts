@@ -14,6 +14,8 @@ const DESCRIPTION = [
   'Use this for one-shot page extraction. For full-site discovery use the `map` tool first.',
   'To pull named values such as prices, titles or links, set `extract.elements` (name → CSS selector)',
   'instead of reading the whole markdown: they come back in `elements`, for no extra credits.',
+  'Markdown and metadata stay on unless you set `markdown: false` and `metadata: false`, so send',
+  'both to get only the values.',
   'Rules: https://crawlbrulee.com/docs/scrape/targeted-extraction.',
   'Check `page_status_code` before you trust the content: it is the HTTP status the site answered',
   'with for the final page. A page the site served is a successful result whatever its status, so a',

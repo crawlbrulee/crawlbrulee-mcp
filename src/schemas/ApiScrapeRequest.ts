@@ -92,11 +92,11 @@ export const Schema_ApiScrapeExtract = z
       .describe('Extract page metadata (title, description, OG tags, etc.) from the page head'),
     cleaned_html: z
       .boolean()
-      .default(true)
+      .default(false)
       .describe(
         'Extract cleaned HTML: the page body with scripts, styles, ads and cookie banners removed'
       ),
-    markdown: z.boolean().default(false).describe('Extract page content as clean Markdown'),
+    markdown: z.boolean().default(true).describe('Extract page content as clean Markdown'),
     raw_html: z
       .boolean()
       .default(false)
@@ -168,7 +168,7 @@ export const Schema_ApiScrapeRequest = z
           'query parameter is kept verbatim and is part of the cache key.'
       ),
     extract: Schema_ApiScrapeExtract.prefault({}).describe(
-      'Which content formats to extract. Defaults to metadata + cleaned_html.'
+      'Which content formats to extract. Defaults to markdown + metadata.'
     ),
     cache: Schema_ApiScrapeCache.optional().describe('Cache settings for this request'),
     require_js: z
