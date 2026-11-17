@@ -4,12 +4,24 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
-## 1.5.0 (unreleased)
+## 1.5.0 (2026-11-18)
+
+### added
+
+- **save a page as a pdf with `extract.pdf` on `scrape` and `scrape_async`.** `{}` takes every default. options: `layout` (`pages` or `single_page`), `paper` (`a4` or `letter`) and `landscape`, both only with `pages`, and `media` (`screen` or `print`). the result carries a top-level `pdf` with a signed `url` that expires 24 hours after the scrape, and its size in `bytes`. a pdf costs what a screenshot costs, and a pdf and a screenshot in one request are billed once. the input schema refuses `paper` or `landscape` with `single_page`.
+- the output schemas and the `scrape` description name two new warnings: `pdf_unavailable` (the pdf could not be made; the rest of the scrape is there) and `pdf_single_page_overflow` (a `single_page` pdf was taller than 15,000 px and goes on over more pages). the readme lists the new `unsupported_pdf_output` error (HTTP 422, not billed): a pdf-only request on a content type that can't be made into a pdf.
+- **dark-theme screenshots with `extract.screenshot.color_scheme`.** `dark` asks the site for its dark theme; `light` is the default. a site without a dark theme looks the same. no extra credits. when the request also asks for a pdf, the pdf shows the dark theme too.
+- **`map` takes the new map fields.** `sitemap_url` starts from one sitemap file on the same site, or on a host the site's robots.txt names, such as a CDN. `depth` (`0` to `3`, default `3`) says how many levels of nested sitemaps to follow, `entries` (`pages`, the default, `sitemaps` or `all`) what to return, and `modified_since` keeps only entries changed at or after a date and time. so a very large site can be mapped in several calls: list its sitemap files with `depth: 0` and `entries: "sitemaps"`, then read each one with `sitemap_url`.
+- **`max_results` sets how many entries the map finds** (default 5000, max 100000). it counts only the kind asked for in `entries`.
+- every map link in the output schema has `type` (`page` or `sitemap`) and `lastmod` (a date and time in UTC, or `null`). `response_meta.truncation` has `total_before_max_results` and `unread_sitemaps`: the sitemap files a call knew about but did not read whole, to read in a next call (except a file that says it is over the size limit: no call reads that one). these are optional in the schema, so a response from an older api version still validates. `discovery_cap_reason` lists `max_results` as a reason.
+- the `map` description says how to map a large site in several calls, why `entries: "pages"` on a sitemap index returns no pages, how `modified_since` works with the cache, and that a `429` from the site on one of its top sitemap files returns `too_many_requests`, not billed.
+- the `scrape_status` and `scrape_result` descriptions say that an async job that asked only for a screenshot, a pdf or both and got none ends `failed` and is not billed. `scrape_result` then returns `job_failed`, or `unsupported_screenshot_output` / `unsupported_pdf_output` when the content type can't be captured. the readme's error table lists `job_failed`.
 
 ### changed
 
 - **`scrape` and `scrape_async` return markdown by default.** with no `extract`, or with `extract` flags left out, the tools now ask for `markdown` + `metadata`, not `cleaned_html` + `metadata`. set `cleaned_html: true` to get cleaned html too, and `markdown: false` to turn markdown off.
 - the `scrape` description and the readme's `elements` example say to send `markdown: false` and `metadata: false` to get only the values.
+- **`max_urls` is deprecated.** use `max_results`, which means the same. the tool still takes `max_urls` and sends it as `max_results`; when both are given, only `max_results` is used. `total_before_max_urls` and the `max_urls` reason are now `total_before_max_results` and `max_results`; the old field is optional in the output schema, since the api stops sending it on 2027-02-01. the tool no longer fills in `max_urls: 5000` itself: a call sends only the map fields you give, and the api applies its defaults.
 - the readme says what a screenshot-only call is: every other format off, `markdown` and `metadata` included, and no `elements`.
 
 ## 1.4.0 (2026-11-06)

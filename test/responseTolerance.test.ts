@@ -267,6 +267,55 @@ describe('structured output tolerates api growth', () => {
     expect(res.isError).toBeFalsy()
   })
 
+  it('accepts the pdf warnings and new fields inside pdf', async () => {
+    h.mock.scrape.mockResolvedValueOnce({
+      ...scrapeResponse(),
+      pdf: { url: 'https://cdn.example.com/a.pdf', bytes: 1200, pages: 3 },
+      warnings: ['pdf_single_page_overflow', 'pdf_unavailable'],
+    })
+
+    const res = await h.client.callTool({
+      name: 'scrape',
+      arguments: { url: 'https://example.com', extract: { pdf: {} } },
+    })
+
+    expect(res.isError).toBeFalsy()
+    expect(res.structuredContent).toMatchObject({ pdf: { pages: 3 } })
+  })
+
+  it('refuses a pdf block that lacks its url', async () => {
+    h.mock.scrape.mockResolvedValueOnce({ ...scrapeResponse(), pdf: { bytes: 1200 } })
+
+    const res = await h.client.callTool({
+      name: 'scrape',
+      arguments: { url: 'https://example.com', extract: { pdf: {} } },
+    })
+
+    expect(res.isError).toBe(true)
+  })
+
+  it('accepts map links with a link type it does not know yet and new fields', async () => {
+    const body = mapResponse()
+    body.links = [
+      { url: 'https://example.com/a', type: 'a-new-type', lastmod: null, priority: 0.5 },
+    ] as unknown as typeof body.links
+    Object.assign(body.response_meta.truncation, {
+      unread_sitemaps: [],
+      total_before_max_results: 1,
+    })
+    h.mock.map.mockResolvedValueOnce(body)
+
+    const res = await h.client.callTool({
+      name: 'map',
+      arguments: { url: 'https://example.com', entries: 'all' },
+    })
+
+    expect(res.isError).toBeFalsy()
+  })
+
+  // An older api version sends no unread_sitemaps, total_before_max_results, type or
+  // lastmod: mapResponse() is that shape, and the cases above already accept it.
+
   it('still rejects unknown keys in tool input', async () => {
     const res = await h.client.callTool({
       name: 'scrape',

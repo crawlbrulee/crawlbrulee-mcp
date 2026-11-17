@@ -16,6 +16,7 @@ const DESCRIPTION = [
   'Poll the job with `scrape_status` and fetch the page with `scrape_result` once done.',
   'Takes `extract.elements` like `scrape` (named values by CSS selector, no extra credits); the',
   'result carries them in `elements`. Rules: https://crawlbrulee.com/docs/scrape/targeted-extraction.',
+  'Takes `extract.pdf` (save the page as a PDF) and `extract.screenshot.color_scheme` like `scrape`.',
   'Optionally attach a per-job completion `webhook`: we deliver a single',
   'signed `scrape.complete` POST to your endpoint when the job finishes (HTTPS required',
   'in production), and echoes your opaque `webhook.metadata` back in the delivery',

@@ -15,9 +15,11 @@ import {
   Schema_ScrapeCustomHeaders,
 } from './ScrapeCustomHeadersSchemas.js'
 import { ELEMENTS_DOCS_URL, Schema_ScrapeElements } from './ScrapeElementsSchemas.js'
+import { Schema_ApiScrapePdf } from './ScrapePdfSchemas.js'
 import {
   Schema_ApiScrapeScreenshotType,
   Schema_ScrapeScreenshotAfterAction,
+  Schema_ScrapeScreenshotColorScheme,
   Schema_ScrapeScreenshotBeforeAction,
   Schema_ScrapeScreenshotDeviceMode,
   refineScrapeScreenshotActionsBefore,
@@ -59,6 +61,14 @@ export const Schema_ApiScrapeFormatScreenshot = z
     device_mode: Schema_ScrapeScreenshotDeviceMode.default(
       DEFAULT_SCRAPE_SCREENSHOT_DEVICE_MODE
     ).describe('Emulate desktop or mobile device viewport'),
+    // No schema default: the api applies `light` itself, so a screenshot that leaves the
+    // field out sends the same body as before the field existed.
+    color_scheme: Schema_ScrapeScreenshotColorScheme.optional().describe(
+      '`light` (default) or `dark`. `dark` asks the site for its dark theme, if it has one, and ' +
+        'the screenshot shows it. A site without a dark theme, or whose dark theme is only a ' +
+        'switch on the page, looks the same as with `light`. When the request also asks for ' +
+        '`extract.pdf`, the PDF shows the dark theme too. No extra credits.'
+    ),
     actions_before: z
       .array(Schema_ScrapeScreenshotBeforeAction)
       .max(MAX_SCRAPE_SCREENSHOT_ACTIONS_BEFORE)
@@ -117,6 +127,22 @@ export const Schema_ApiScrapeExtract = z
       ),
     screenshot: Schema_ApiScrapeFormatScreenshot.optional().describe(
       'Capture a screenshot of the page'
+    ),
+    pdf: Schema_ApiScrapePdf.optional().describe(
+      'Save the page as a PDF: a real document with selectable text and working links, ' +
+        'backgrounds printed, and no header or footer added. `{}` takes every default. The ' +
+        'request runs in a browser. The response carries a top-level `pdf` with a signed link ' +
+        'that expires 24 hours after the scrape. It costs what a screenshot costs, and a PDF and ' +
+        'a screenshot in one request are billed once. A cached copy of the page answers only when ' +
+        'it has a PDF made with the same settings; `cache.max_age: 0` always makes a new one. In ' +
+        'rare cases the PDF cannot be made: the rest of the scrape still comes back, with the ' +
+        '`pdf_unavailable` warning, and the request costs what it costs without the PDF. A ' +
+        'PDF-only request (every other format off, `markdown` and `metadata` included) on a page ' +
+        'that cannot be made into a PDF is a 422 `unsupported_pdf_output`, not billed. An async ' +
+        'job in that case, or one that asked only for a PDF and got none, ends `failed` and is ' +
+        'not billed. A PDF on ' +
+        'its own is made with the light theme. When the same request also asks for a screenshot with ' +
+        '`color_scheme: "dark"`, the PDF is dark too.'
     ),
     elements: Schema_ScrapeElements.optional().describe(
       'Named values to read from the page by CSS selector, returned in the top-level ' +

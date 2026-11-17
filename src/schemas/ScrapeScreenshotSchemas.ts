@@ -15,6 +15,10 @@ export const Schema_ScrapeScreenshotDeviceMode = z
   .enum(['desktop', 'mobile'])
   .describe('Device mode to emulate for viewport sizing')
 
+export const Schema_ScrapeScreenshotColorScheme = z
+  .enum(['light', 'dark'])
+  .describe('Color scheme to ask the site for: light or dark')
+
 export const Schema_ScrapeScreenshotBeforeAction = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('wait').describe('Wait for a duration before capturing'),

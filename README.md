@@ -49,7 +49,7 @@ claude mcp add crawlbrulee -- npx -y @crawlbrulee/mcp
 other stdio hosts run the same command: `npx -y @crawlbrulee/mcp`. a few of them (Codex,
 Cursor, Windsurf, Gemini CLI, Claude Desktop) need the key or the variable named in their
 config file, and VS Code and the Claude Code plugin can ask for the key in a masked prompt.
-the file and the entry for each one: [mcp setup in the docs](https://crawlbrulee.com/docs/mcp#install).
+the file and the entry for each one: [mcp setup in the docs](https://crawlbrulee.com/docs/mcp/local#install).
 
 if a key stops working (`invalid_credentials`), it's expired, revoked or mistyped: create a
 new one the same way, replace the old one, and start your agent again.
@@ -72,7 +72,7 @@ server failing to come up. see
 ### `scrape`
 
 fetch a single url and return the requested content (markdown, cleaned
-html, raw html, links, images, screenshot, page metadata).
+html, raw html, links, images, screenshot, pdf, page metadata).
 
 **input** — only `url` is required; everything else has sane defaults.
 
@@ -139,7 +139,39 @@ a name with no match is `null` (or `[]` with `all: true`). limits and selector r
 
 your own `User-Agent` can lower the success rate, and the response then carries the `custom_user_agent` warning. never put secrets in the `User-Agent`. the limits and which headers can't be set: see [headers and cookies](https://crawlbrulee.com/docs/scrape/custom-headers-and-cookies).
 
-**output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is simply left out while the rest is still returned — but a screenshot-only call (every other format off: `markdown: false` and `metadata: false`, and no `cleaned_html`, `raw_html`, `links`, `images` or `elements`) that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. the result also carries `page_status_code` and a top-level `response_meta.usage` block:
+**save the page as a pdf with `extract.pdf`.** you get a real document, with text you can select and links that work. `{}` takes every default: the page on a4 sheets, as it looks on screen. a pdf costs what a screenshot costs, and a pdf and a screenshot in one request are billed once. `scrape_async` takes it too.
+
+```jsonc
+{
+  "url": "https://example.com/report",
+  "extract": {
+    "markdown": false,
+    "metadata": false,
+    "pdf": { "layout": "pages", "paper": "letter", "landscape": false, "media": "print" },
+  },
+}
+// → "pdf": { "url": "https://...", "bytes": 48213 }
+```
+
+| option      | values                   | default  | what it does                                                                                                     |
+| ----------- | ------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------- |
+| `layout`    | `pages` \| `single_page` | `pages`  | `pages` puts the page on sheets of paper. `single_page` makes one page as tall as the web page, up to 15,000 px. |
+| `paper`     | `a4` \| `letter`         | `a4`     | paper size. only with `pages`.                                                                                   |
+| `landscape` | `true` \| `false`        | `false`  | turn the paper sideways. only with `pages`.                                                                      |
+| `media`     | `screen` \| `print`      | `screen` | `print` uses the site's own print style, which on many sites hides menus and images.                             |
+
+the pdf link is a signed link that expires 24 hours after the scrape, like a screenshot link: download the file and keep it, not the link. a cached copy answers only when it has a pdf made with the same settings; `cache.max_age: 0` always makes a new one. in rare cases the pdf can't be made: you still get the rest of the scrape, with the `pdf_unavailable` warning, and the request costs what it costs without the pdf.
+
+**dark-theme screenshots with `color_scheme`.** set `extract.screenshot.color_scheme` to `dark` to ask the site for its dark theme. a site with no dark theme looks the same as with `light`, the default. it costs no extra credits. when the request also asks for `extract.pdf`, the pdf shows the dark theme too; a pdf on its own is made with the light theme.
+
+```jsonc
+{
+  "url": "https://example.com",
+  "extract": { "screenshot": { "type": "viewport", "color_scheme": "dark" } },
+}
+```
+
+**output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots and pdfs are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is left out while the rest is still returned. a screenshot-only call (every other format off: `markdown: false` and `metadata: false`, and no `cleaned_html`, `raw_html`, `links`, `images` or `elements`) that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. a pdf-only call works the same way, with `unsupported_pdf_output`. when no capture could be made at all, such a call fails with `internal_server_error` (HTTP 500), also not billed. a `scrape_async` job that asks only for a screenshot, a pdf or both and gets none ends `failed` and isn't billed: `scrape_result` then returns the same `unsupported_screenshot_output` or `unsupported_pdf_output`, or `job_failed` when the capture could not be made. the result also carries `page_status_code` and a top-level `response_meta.usage` block:
 
 ```jsonc
 {
@@ -175,7 +207,7 @@ alongside `response_meta.usage`, the result surfaces any non-fatal `warnings` �
 | `raw_html_truncated`      | the page body exceeded 10,000,000 characters; `raw_html` is cut at a tag boundary, never mid-tag.                    |
 | `elements_truncated`      | an `elements` value hit a limit; see [targeted extraction](https://crawlbrulee.com/docs/scrape/targeted-extraction). |
 
-two more codes are not about size. `screenshot_unavailable` means a screenshot was asked for, but the page came back from the http engine without one; the rest of the result is still there. `custom_user_agent` means the request set its own `User-Agent` header; this can lower the success rate.
+more codes are not about size. `screenshot_unavailable` means a screenshot was asked for, but the page came back from the http engine without one; the rest of the result is still there. `pdf_unavailable` means the same for a pdf. `pdf_single_page_overflow` means a `single_page` pdf was taller than 15,000 px, so it goes on over more pages. `custom_user_agent` means the request set its own `User-Agent` header; this can lower the success rate.
 
 and if you requested an extract that doesn't apply to the content type (e.g. `metadata` of a JSON file), the field name comes back in an `unsupported_fields` list — with the rest of the payload still returned.
 
@@ -210,7 +242,7 @@ the job lifecycle is documented under [async scrape](https://crawlbrulee.com/doc
 
 ### `scrape_status`
 
-look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). once the job is `done` the response also carries a `response_meta.usage` block (`total_credit_cost` and its parts, billed `engine`, resolved `proxy` tier). a cache hit is represented by `engine: "cache"`. a job whose page the site served ends `done` even when that page is a 404 — read `page_status_code` in the result. poll until `done`, then call `scrape_result`.
+look up the current lifecycle status of an async job: `pending`, `running`, `done`, or `failed` (with an `error` message when failed). once the job is `done` the response also carries a `response_meta.usage` block (`total_credit_cost` and its parts, billed `engine`, resolved `proxy` tier). a cache hit is represented by `engine: "cache"`. a job whose page the site served ends `done` even when that page is a 404 — read `page_status_code` in the result. a job that asked only for a screenshot, a pdf or both and got none ends `failed`, not billed; `scrape_result` names the reason. poll until `done`, then call `scrape_result`.
 
 ```jsonc
 { "job_id": "..." }
@@ -218,7 +250,7 @@ look up the current lifecycle status of an async job: `pending`, `running`, `don
 
 ### `scrape_result`
 
-fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool (including `page_status_code`, `metadata`, `elements` and `response_meta.usage`). errors if the job is still `pending`/`running`, so check `scrape_status` first.
+fetch the extracted content of a completed async job — the same result shape as the synchronous `scrape` tool (including `page_status_code`, `metadata`, `elements` and `response_meta.usage`). errors if the job is still `pending`/`running`, so check `scrape_status` first. a `failed` job returns `job_failed`, or `unsupported_screenshot_output` / `unsupported_pdf_output` for a capture-only job on a content type that can't be captured.
 
 ```jsonc
 { "job_id": "..." }
@@ -226,11 +258,23 @@ fetch the extracted content of a completed async job — the same result shape a
 
 ### `map`
 
-build (or fetch a cached) link-map for a website. combines sitemap discovery with homepage link extraction. use this to enumerate a site before scraping selected pages. each link is just `{ url }`.
+build (or fetch a cached) link map of a website from its sitemaps, plus the links on its home page. use this to enumerate a site before scraping selected pages. every link is `{ url, type, lastmod }`: `type` is `page` or `sitemap`, and `lastmod` is the entry's date from the sitemap, in UTC, or `null` when the sitemap gives none. a link found on the home page is a `page` with `lastmod: null`.
 
-`max_urls` (default `5000`, max `100000`) is a discovery budget, not a trim at the end — discovery stops as soon as that many urls are found, so a smaller value is a faster, cheaper crawl. `limit` (default `5000`, max `10000`) only pages the answer.
+a plain map (`{ "url": "https://example.com" }`) returns pages. it reads the site's top sitemap files and two levels of nested ones, and adds the links on the home page.
 
-returned urls are normalized the same way `scrape` normalizes its returned `url`, so map-then-scrape stays on one host. results are ordered with the most useful links first.
+| field            | values                          | default | what it does                                                                                                                                                                        |
+| ---------------- | ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sitemap_url`    | a full http or https address    | none    | start from this sitemap file. it must be on the same site as `url`, or on a host the site's robots.txt names, such as a CDN. left out: start from the site's own top sitemap files. |
+| `depth`          | `0` to `3`                      | `3`     | how many levels of nested sitemaps to follow (see below).                                                                                                                           |
+| `entries`        | `pages` \| `sitemaps` \| `all`  | `pages` | what to return: page addresses, sitemap files, or both.                                                                                                                             |
+| `modified_since` | a date, or ISO 8601 with a zone | none    | only entries whose `lastmod` is at or after it (see below).                                                                                                                         |
+| `max_results`    | `1` to `100000`                 | `5000`  | the most entries the map finds, counting only the kind in `entries`. a discovery budget, not a trim at the end (see below).                                                         |
+| `limit`          | `1` to `10000`                  | `5000`  | links per page of the answer. it only pages the answer.                                                                                                                             |
+| `sitemap_only`   | `true` \| `false`               | `false` | use the sitemaps only: leave out the links found on the home page.                                                                                                                  |
+
+`max_results` stops discovery as soon as that many entries of the asked kind are found, so a smaller value is a faster, lighter map. a map stopped that way returns exactly that many links with `response_capped: false`. the signal that the site has more is `truncation.discovery_cap_reason`.
+
+returned urls are normalized the same way `scrape` normalizes its returned `url`, so map-then-scrape stays on one host. results are ordered with the most useful links first. the site root is listed only when a sitemap lists it.
 
 the response's `response_meta` carries `pagination`, `truncation`, and a `usage` block (`total_credit_cost` = `engine_credit_cost` × `proxy_multiplier` + `zero_data_retention_credit_cost`, billed `engine`, resolved `proxy` tier). map has no screenshot slicing and no `page_status_code`, since it reads many files, not one page. a map that found nothing because the site answered only with statuses we don't bill (a `5xx`, for example), or not at all, is empty and free.
 
@@ -239,7 +283,7 @@ the response's `response_meta` carries `pagination`, `truncation`, and a `usage`
   "url": "https://example.com",
   "sitemap_only": false,
   "types": { "internal": true, "external": false, "internal_subdomains": true },
-  "max_urls": 5000,
+  "max_results": 5000,
   "page": 1,
   "limit": 1000,
   "zero_data_retention": false,
@@ -248,23 +292,46 @@ the response's `response_meta` carries `pagination`, `truncation`, and a `usage`
 
 `zero_data_retention` works as it does on `scrape` (see [zero data retention](https://crawlbrulee.com/docs/zero-data-retention)).
 
-a map stopped by your own `max_urls` returns exactly that many links with `response_capped: false` — the signal that the site has more is `truncation.discovery_cap_reason`:
-
 ```jsonc
 {
   "truncation": {
     "storage_capped": false,
     "response_capped": false,
-    "total_before_max_urls": 5000,
+    "total_before_max_results": 5000,
     "total_detected_before_storage_cap": 5000,
     "discovery_capped": true, // discovery stopped before reading every sitemap file
     "sitemaps_skipped": 3, // files skipped or only partly read
-    "discovery_cap_reason": "max_urls", // retry with a higher max_urls
+    "unread_sitemaps": [], // sitemap files this call did not read whole
+    "discovery_cap_reason": "max_results", // retry with a higher max_results
   },
 }
 ```
 
-`discovery_cap_reason` is one of `max_urls`, `time`, `file_budget`, `depth`, `file_size`, `unread_files`, or `null` when nothing stopped discovery. only `max_urls` is a limit you can raise from the request. `unread_files` means a sitemap file the site publishes could not be read at all this time — often temporary, so asking again later can return more. `time`, `file_budget`, `depth` and `file_size` mean the site itself is big, slow or deep, and a retry will not help.
+`discovery_cap_reason` is one of these, or `null` when nothing stopped discovery:
+
+- `max_results`: your own `max_results` was reached. ask again with a higher one to get more.
+- `depth`: there are sitemap files past the `depth` you asked for. they are in `unread_sitemaps`. this is the answer to the depth you chose, not a fault.
+- `unread_files`: a sitemap file could not be read whole this time. when its download broke off, the links received before the break are returned, and the file is in `unread_sitemaps`. often temporary, so asking again later can return more.
+- `time`, `file_budget`, `file_size`: the site is big or slow, and a retry will not help. with `file_size`, a file of pages that turns out too large while it is read gives the links in its first part. a file that says up front that it is over the size limit, or any other file that turns out too large (such as a sitemap index), gives nothing and is in `unread_sitemaps`.
+
+#### map a very large site in several calls
+
+a very large or deep site is mapped in several calls: list its sitemap files with `depth: 0` and `entries: "sitemaps"`, then read each one with `sitemap_url`. `truncation.unread_sitemaps` names the files a call did not read whole, to read next. the full walk-through is in [map a very large or deep site in several calls](https://crawlbrulee.com/docs/map/sitemaps#map-a-very-large-or-deep-site-in-several-calls).
+
+```jsonc
+// 1. list the site's top sitemap files
+{ "url": "https://example.com", "depth": 0, "entries": "sitemaps" }
+// 2. read one of them
+{ "url": "https://example.com", "sitemap_url": "https://example.com/sitemap-products-1.xml.gz" }
+```
+
+`modified_since` leaves out every entry with no `lastmod`, and a map with it is always fresh, so `cache.max_age` does nothing. see [find what changed since a date](https://crawlbrulee.com/docs/map/sitemaps#find-what-changed-since-a-date).
+
+if the site answers `429` on the file in `sitemap_url`, on its robots.txt or on one of its top sitemap files, the tool returns `too_many_requests` (not billed): wait and try again.
+
+#### old names
+
+`max_urls` is the old name of `max_results`, and `total_before_max_urls` of `total_before_max_results`. both still work and mean the same. the api drops them on 2027-02-01. this tool still takes `max_urls` and sends it as `max_results`; when you give both, only `max_results` is used.
 
 see the [map endpoint](https://crawlbrulee.com/docs/map) for discovery rules and pagination semantics.
 
@@ -307,6 +374,8 @@ agents can branch on the `errorName` code. the set comes from the sdk's `ApiErro
 | `zero_data_retention_not_enabled` | `zero_data_retention` is not enabled for your organization (HTTP 403). not billed.             |
 | `scrape_error`                    | the scrape could not be completed. a page the site served, even a 404, is never this error.    |
 | `unsupported_screenshot_output`   | screenshot-only request on a content type that can't be screenshotted (HTTP 422). not billed.  |
+| `unsupported_pdf_output`          | pdf-only request on a content type that can't be made into a pdf (HTTP 422). not billed.       |
+| `job_failed`                      | the async job ended `failed`, so it has no result (`scrape_result`, HTTP 400).                 |
 | `not_found`                       | async job ID unknown, or submitted more than 24 hours ago (`scrape_status` / `scrape_result`). |
 | `request_timeout`                 | network / read timeout. safe to retry.                                                         |
 | `client_closed_request`           | caller cancelled before completion.                                                            |

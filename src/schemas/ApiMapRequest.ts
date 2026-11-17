@@ -21,13 +21,11 @@ export const Schema_ApiMapLocation = z
 
 export const DEFAULT_API_MAP_CACHE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60
 /**
- * How many URLs a /map call discovers and stores when the caller names no
- * limit. Sitemap discovery stops here, so the default is real crawl work, not
- * a slice taken at the end — 5000 covers the whole site for the great majority
- * of roots while keeping an unparameterised call cheap and fast.
+ * How many entries a /map call finds when the caller names no limit. Discovery
+ * stops here, so the default is real work, not a slice taken at the end.
  */
-export const DEFAULT_API_MAP_MAX_URLS = 5000
-export const MAX_API_MAP_MAX_URLS = 100000
+export const DEFAULT_API_MAP_MAX_RESULTS = 5000
+export const MAX_API_MAP_MAX_RESULTS = 100000
 export const DEFAULT_API_MAP_PAGE_LIMIT = 5000
 export const MAX_API_MAP_PAGE_LIMIT = 10000
 
@@ -54,6 +52,9 @@ export const Schema_ApiMapCache = z
   })
   .describe('Cache settings for the map request')
 
+export const DEFAULT_API_MAP_DEPTH = 3
+export const API_MAP_ENTRIES_VALUES = ['pages', 'sitemaps', 'all'] as const
+
 export const Schema_ApiMapRequest = z.object({
   url: z
     .string()
@@ -66,19 +67,75 @@ export const Schema_ApiMapRequest = z.object({
   sitemap_only: z
     .boolean()
     .default(false)
-    .describe('Only use sitemap.xml — skip homepage link extraction'),
+    .describe(
+      'Use the sitemaps only: leave out the links found on the home page. A map with ' +
+        '`modified_since` or `sitemap_url` never adds home page links.'
+    ),
   types: Schema_ApiMapTypes.optional().describe('Filter which link types to include'),
   cache: Schema_ApiMapCache.optional().describe('Cache settings for this request'),
+  // No schema default for the map's own fields below: the api applies its defaults, so the
+  // tool sends only what the agent asked for.
+  max_results: z
+    .number()
+    .int()
+    .positive()
+    .max(MAX_API_MAP_MAX_RESULTS)
+    .optional()
+    .describe(
+      `The most entries the map finds, counting only the kind asked for in \`entries\`. Default ${DEFAULT_API_MAP_MAX_RESULTS}, ` +
+        `maximum ${MAX_API_MAP_MAX_RESULTS}. Discovery stops as soon as this many have been found, so a smaller ` +
+        'value is a faster and lighter map, not just a smaller answer.'
+    ),
   max_urls: z
     .number()
     .int()
     .positive()
-    .max(MAX_API_MAP_MAX_URLS)
-    .default(DEFAULT_API_MAP_MAX_URLS)
+    .max(MAX_API_MAP_MAX_RESULTS)
+    .optional()
     .describe(
-      'Maximum number of URLs to discover and store in the map. Default 5000, maximum 100000. ' +
-        'Sitemap discovery stops as soon as this many URLs have been found, so a smaller value ' +
-        'is a faster and lighter crawl, not just a smaller answer.'
+      'Deprecated: use `max_results`, which means the same. This tool sends it as ' +
+        '`max_results`. When both are given, only `max_results` is used.'
+    ),
+  sitemap_url: z
+    .string()
+    .optional()
+    .describe(
+      'Start from this sitemap file, as a full http or https address. It must be on the ' +
+        "same site as `url`, or on a host the site's robots.txt names, such as a CDN. Left out: start from the site's own top sitemap files."
+    ),
+  depth: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional()
+    .describe(
+      `How many levels of nested sitemaps to follow: 0 to 3, default ${DEFAULT_API_MAP_DEPTH}. With \`sitemap_url\`, ` +
+        "level 0 is that file, and it is read. Without it, level 0 is the list of the site's " +
+        'top sitemap files, which 0 returns without reading them: `depth: 0` with ' +
+        '`entries: "sitemaps"` lists them. A sitemap index holds only sitemap files, so reading ' +
+        'one at a low depth with `entries: "pages"` returns no pages: ask with ' +
+        '`entries: "sitemaps"` or a higher depth. A site with a deeper tree is mapped in ' +
+        'several calls, one per file.'
+    ),
+  entries: z
+    .enum(API_MAP_ENTRIES_VALUES)
+    .optional()
+    .describe(
+      'What to return: `pages` (page addresses, the default), `sitemaps` (sitemap files) or ' +
+        '`all` (both).'
+    ),
+  // a plain date is the start of that day in UTC; the api reads it the same way
+  modified_since: z
+    .union([z.iso.date(), z.iso.datetime({ offset: true })])
+    .optional()
+    .describe(
+      'Return only entries whose `lastmod` is at or after this date (`2026-11-01`, the start of ' +
+        'that day in UTC) or date and time (ISO 8601, with a time zone). An entry with no `lastmod` is left out, so every entry returned matches; ' +
+        'links found on the home page have none, so none is returned. A nested sitemap whose ' +
+        'own `lastmod` is older is not read, so a site that does not update the dates in its ' +
+        'sitemap index can hide changed pages. A request with this field is always mapped ' +
+        'fresh: it never reads from or adds to the cache, so `cache.max_age` does nothing, and ' +
+        'it is priced as a fresh map.'
     ),
   page: z.number().int().positive().default(1).describe('Page number for paginated results'),
   limit: z
