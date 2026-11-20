@@ -195,7 +195,7 @@ the pdf link is a signed link that expires 24 hours after the scrape, like a scr
 }
 ```
 
-**a page the site served is a result, not an error.** `page_status_code` is the HTTP status the site answered with for the final page, after redirects. a 404, 410 or 503 page comes back with its content and its status here, so check `page_status_code` before you trust the content: a 404 means the markdown is the site's "not found" page. 2xx and 4xx pages are billed, except 403, 407, 408, 429 and 451; 5xx pages are never billed. when the site can't be reached at all, the tool returns a `target_unreachable` error instead (see [errors](#errors)).
+**a page the site served is a result, not an error.** `page_status_code` is the HTTP status the site answered with for the final page, after redirects. a 404, 410 or 503 page comes back with its content and its status here, so check `page_status_code` before you trust the content: a 404 means the markdown is the site's "not found" page. 2xx and 4xx pages are billed, except 403, 407, 408, 429, 444 and 451; 5xx pages are never billed. when the site can't be reached at all, the tool returns a `target_unreachable` error instead (see [errors](#errors)).
 
 alongside `response_meta.usage`, the result surfaces any non-fatal `warnings` — stable string codes an agent can switch on. an outsized page is truncated rather than refused, and the code names which part was cut:
 
@@ -258,7 +258,7 @@ fetch the extracted content of a completed async job — the same result shape a
 
 ### `map`
 
-build (or fetch a cached) link map of a website from its sitemaps, plus the links on its home page. use this to enumerate a site before scraping selected pages. every link is `{ url, type, lastmod }`: `type` is `page` or `sitemap`, and `lastmod` is the entry's date from the sitemap, in UTC, or `null` when the sitemap gives none. a link found on the home page is a `page` with `lastmod: null`.
+build (or fetch a cached) link map of a website from its sitemaps, plus the links on its home page. use this to enumerate a site before scraping selected pages. every link is `{ url, type, lastmod }`: `type` is `page`, `sitemap` or `sitemap_index` (a sitemap file that lists other sitemap files), and `lastmod` is the entry's date from the sitemap, in UTC, or `null` when the sitemap gives none. a link found on the home page is a `page` with `lastmod: null`. a `sitemap_index` is a file the map found to be an index. `sitemap` is a file that lists pages, or one the map did not open (past `depth`, or it could not be read). read either kind with `sitemap_url` in another call.
 
 a plain map (`{ "url": "https://example.com" }`) returns pages. it reads the site's top sitemap files and two levels of nested ones, and adds the links on the home page.
 
@@ -266,7 +266,7 @@ a plain map (`{ "url": "https://example.com" }`) returns pages. it reads the sit
 | ---------------- | ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sitemap_url`    | a full http or https address    | none    | start from this sitemap file. it must be on the same site as `url`, or on a host the site's robots.txt names, such as a CDN. left out: start from the site's own top sitemap files. |
 | `depth`          | `0` to `3`                      | `3`     | how many levels of nested sitemaps to follow (see below).                                                                                                                           |
-| `entries`        | `pages` \| `sitemaps` \| `all`  | `pages` | what to return: page addresses, sitemap files, or both.                                                                                                                             |
+| `entries`        | `pages` \| `sitemaps` \| `all`  | `pages` | what to return: page addresses, sitemap files (`sitemap` or `sitemap_index`), or both.                                                                                              |
 | `modified_since` | a date, or ISO 8601 with a zone | none    | only entries whose `lastmod` is at or after it (see below).                                                                                                                         |
 | `max_results`    | `1` to `100000`                 | `5000`  | the most entries the map finds, counting only the kind in `entries`. a discovery budget, not a trim at the end (see below).                                                         |
 | `limit`          | `1` to `10000`                  | `5000`  | links per page of the answer. it only pages the answer.                                                                                                                             |
@@ -310,22 +310,22 @@ the response's `response_meta` carries `pagination`, `truncation`, and a `usage`
 `discovery_cap_reason` is one of these, or `null` when nothing stopped discovery:
 
 - `max_results`: your own `max_results` was reached. ask again with a higher one to get more.
-- `depth`: there are sitemap files past the `depth` you asked for. they are in `unread_sitemaps`. this is the answer to the depth you chose, not a fault.
+- `depth`: there are sitemap files past the `depth` you asked for. they are in `unread_sitemaps`. this is the answer to the depth you chose, not a fault. read each one with `sitemap_url`, or ask with a higher `depth`.
 - `unread_files`: a sitemap file could not be read whole this time. when its download broke off, the links received before the break are returned, and the file is in `unread_sitemaps`. often temporary, so asking again later can return more.
 - `time`, `file_budget`, `file_size`: the site is big or slow, and a retry will not help. with `file_size`, a file of pages that turns out too large while it is read gives the links in its first part. a file that says up front that it is over the size limit, or any other file that turns out too large (such as a sitemap index), gives nothing and is in `unread_sitemaps`.
 
 #### map a very large site in several calls
 
-a very large or deep site is mapped in several calls: list its sitemap files with `depth: 0` and `entries: "sitemaps"`, then read each one with `sitemap_url`. `truncation.unread_sitemaps` names the files a call did not read whole, to read next. the full walk-through is in [map a very large or deep site in several calls](https://crawlbrulee.com/docs/map/sitemaps#map-a-very-large-or-deep-site-in-several-calls).
+a very large or deep site is mapped in several calls. first ask with `depth: 1` and `entries: "sitemaps"`: one call lists the site's top sitemap files and every file they list. a listed file shows as `sitemap` until a map reads it, even when it is an index. then read each link of type `sitemap`, plus each `sitemap_index` link that is also in `truncation.unread_sitemaps` (an index this map read only in part), with `sitemap_url`, one file per call: the files of an index read whole are already in your list. or ask with a higher `depth`. the full walk-through is in [map a very large or deep site in several calls](https://crawlbrulee.com/docs/map/sitemaps#map-a-very-large-or-deep-site-in-several-calls).
 
 ```jsonc
-// 1. list the site's top sitemap files
-{ "url": "https://example.com", "depth": 0, "entries": "sitemaps" }
-// 2. read one of them
+// 1. list the site's top sitemap files and every file they list
+{ "url": "https://example.com", "depth": 1, "entries": "sitemaps" }
+// 2. read one of them: a `sitemap` link, or a `sitemap_index` link that is also in unread_sitemaps
 { "url": "https://example.com", "sitemap_url": "https://example.com/sitemap-products-1.xml.gz" }
 ```
 
-`modified_since` leaves out every entry with no `lastmod`, and a map with it is always fresh, so `cache.max_age` does nothing. see [find what changed since a date](https://crawlbrulee.com/docs/map/sitemaps#find-what-changed-since-a-date).
+`modified_since` leaves out every entry with no `lastmod`, and a map with it is always fresh, so `cache.max_age` does nothing. every sitemap file is read whatever its own date, and each entry is judged by its own `lastmod`. with `entries: "sitemaps"` a file is returned by its own date, not by the dates of the pages in it, so ask with `entries: "pages"` to find the pages that changed. see [find what changed since a date](https://crawlbrulee.com/docs/map/sitemaps#find-what-changed-since-a-date).
 
 if the site answers `429` on the file in `sitemap_url`, on its robots.txt or on one of its top sitemap files, the tool returns `too_many_requests` (not billed): wait and try again.
 

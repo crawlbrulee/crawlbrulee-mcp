@@ -52,7 +52,7 @@ export const Schema_ApiMapUsageMeta = z.looseObject({
 
 export type ApiMapUsageMeta = z.infer<typeof Schema_ApiMapUsageMeta>
 
-export const API_MAP_LINK_TYPE_VALUES = ['page', 'sitemap'] as const
+export const API_MAP_LINK_TYPE_VALUES = ['page', 'sitemap', 'sitemap_index'] as const
 
 // The api always sends `type` and `lastmod`. They are optional here so a response from an
 // older api version still validates.
@@ -61,7 +61,14 @@ export const Schema_ApiMapLinkItem = z.looseObject({
   type: openEnum(API_MAP_LINK_TYPE_VALUES)
     .optional()
     .describe(
-      "`page` for a page address, `sitemap` for a sitemap file, which you can read with `sitemap_url` in another call (a file on another site only when the site's robots.txt names its host). A link found on the home page is a `page`."
+      '`page` for a page address. `sitemap_index` for a sitemap file that this map found to ' +
+        'be a sitemap index (a file that lists other sitemap files), whether it read all of the ' +
+        'file, part of it, or only its start. Such a file can also be in `unread_sitemaps` when ' +
+        'this map did not read all of it. `sitemap` for any other sitemap file: one that lists ' +
+        'pages, or one whose kind this map did not learn (past `depth`, or it could not be ' +
+        'read). Read a `sitemap` or `sitemap_index` file with `sitemap_url` in another call (a ' +
+        "file on another site only when the site's robots.txt names its host). A link found on " +
+        'the home page is a `page`.'
     ),
   lastmod: z
     .string()
@@ -146,7 +153,9 @@ export const Schema_ApiMapTruncation = z.looseObject({
         '"max_results": your own max_results was reached; ask again with a higher one to get ' +
         'more. "depth": there are sitemap files past the `depth` you asked for, listed in ' +
         'unread_sitemaps; this is the answer to the depth you chose, not a fault (with ' +
-        '`depth: 0` it is how a site\'s top sitemap files are listed). "time": discovery ran out ' +
+        "`depth: 0` it is how a site's top sitemap files are listed, and with `depth: 1` and " +
+        '`entries: "sitemaps"` how the top files and every file they list are listed). Read ' +
+        'each file past it with `sitemap_url`, or ask with a higher depth. "time": discovery ran out ' +
         'of its time budget. "file_budget": the site has more sitemap files than one request ' +
         'reads. "file_size": a sitemap file was too large. A file that says up front that it is ' +
         'over the size limit is not downloaded: nothing comes back from it, and it is listed in ' +

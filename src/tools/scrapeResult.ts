@@ -20,7 +20,7 @@ const DESCRIPTION = [
   'with for the final page. A page the site served is a successful result whatever its status, so a',
   '404 or 503 page comes back with its content, not as an error. A 404 means the markdown is the',
   'site\'s "not found" page, not the page you asked for. 2xx and 4xx pages are billed, except 403,',
-  '407, 408, 429 and 451; 5xx pages are never billed.',
+  '407, 408, 429, 444 and 451; 5xx pages are never billed.',
   'A job answers for 24 hours after it was submitted, then returns `not_found`. Screenshot and PDF',
   'URLs are signed download links that expire at the same moment, however late you fetch the',
   'result: download the file if you need it later.',

@@ -34,8 +34,9 @@ export const Schema_ApiProxyType = z
   .enum(API_PROXY_TIER_VALUES)
   .default('auto')
   .describe(
-    'Proxy tier: basic, advanced, or auto. ' +
-      'Defaults to auto (automatic selection: basic tier first, escalates to advanced on failure).'
+    'Proxy tier: basic, advanced, or auto. Defaults to auto: we start with the lightest way to ' +
+      'get the page and step up our effort on our own when a site needs more, and bill the tier ' +
+      'that delivered.'
   )
 
 export const Schema_ApiScrapeViewport = z
@@ -200,9 +201,17 @@ export const Schema_ApiScrapeRequest = z
     require_js: z
       .boolean()
       .default(false)
-      .describe('Use a headless browser to render JavaScript before scraping'),
+      .describe(
+        'Go straight to a headless browser to render JavaScript before scraping. Without it, we ' +
+          'still move to a browser on our own when a page needs one; set it when you already know ' +
+          'the page needs JavaScript, to save time.'
+      ),
     cleanup: Schema_ApiScrapeCleanup.prefault({ ...DEFAULT_SCRAPE_CLEANUP }),
-    proxy: Schema_ApiProxyType.describe('Proxy tier to use for fetching'),
+    proxy: Schema_ApiProxyType.describe(
+      'Proxy tier. Defaults to auto: we start with the lightest way to get the page and step up ' +
+        'our effort on our own when a site needs more (a stronger proxy, a real browser, or ' +
+        'both), and bill the tier that delivered. basic or advanced pins the tier.'
+    ),
     location: Schema_ApiScrapeLocation.optional(),
     zero_data_retention: z
       .boolean()

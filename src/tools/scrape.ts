@@ -21,7 +21,7 @@ const DESCRIPTION = [
   'with for the final page. A page the site served is a successful result whatever its status, so a',
   '404 or 503 page comes back with its content, not as an error. A 404 means the markdown is the',
   'site\'s "not found" page, not the page you asked for. 2xx and 4xx pages are billed, except 403,',
-  '407, 408, 429 and 451; 5xx pages are never billed.',
+  '407, 408, 429, 444 and 451; 5xx pages are never billed.',
   'If the site cannot be reached at all the tool returns a `target_unreachable` error (HTTP 502,',
   'not billed): retry later or check the URL.',
   'Set `extract.pdf: {}` to save the page as a PDF (pages or one long page, a4 or letter); it',

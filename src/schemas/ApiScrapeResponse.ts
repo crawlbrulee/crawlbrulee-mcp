@@ -157,7 +157,7 @@ export const Schema_ApiScrapeSuccessResponse = z.looseObject({
     .int()
     .optional()
     .describe(
-      'The HTTP status the site answered with for the final page, after redirects. Check it before you trust the content. A page the site served is a successful result whatever its status: a 404 or 503 page comes back with its content here, not as an error, so a 404 means the markdown is the site\'s "not found" page, not the page you asked for. Billing follows this status: 2xx and 4xx pages are billed, except 403, 407, 408, 429 and 451; 5xx pages are never billed. Older api versions do not send it; they only returned pages that loaded normally.'
+      'The HTTP status the site answered with for the final page, after redirects. Check it before you trust the content. A page the site served is a successful result whatever its status: a 404 or 503 page comes back with its content here, not as an error, so a 404 means the markdown is the site\'s "not found" page, not the page you asked for. Billing follows this status: 2xx and 4xx pages are billed, except 403, 407, 408, 429, 444 and 451; 5xx pages are never billed. Older api versions do not send it; they only returned pages that loaded normally.'
     ),
   content_type: z.string().optional().describe('Content-Type header returned by the server'),
   unsupported_fields: z

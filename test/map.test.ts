@@ -7,8 +7,9 @@ import { buildServer } from '../src/server.js'
 import { makeMockedClient, type MockedCrawlbrulee } from './helpers/mockClient.js'
 
 // The map tool's input mirrors the api: `sitemap_url`, `depth`, `entries`,
-// `modified_since` and `max_results`. Every link carries `type` and `lastmod`,
-// and `truncation.unread_sitemaps` lists the files a call did not read.
+// `modified_since` and `max_results`. Every link carries `type` (`page`, `sitemap` or
+// `sitemap_index`) and `lastmod`, and `truncation.unread_sitemaps` lists the files a call
+// did not read.
 
 interface Harness {
   client: Client
@@ -29,6 +30,11 @@ async function setup(): Promise<Harness> {
 const mapResponse = () => ({
   links: [
     {
+      url: 'https://example.com/sitemaps/products.xml',
+      type: 'sitemap_index',
+      lastmod: '2026-11-01T00:00:00.000Z',
+    },
+    {
       url: 'https://example.com/sitemaps/products-1.xml.gz',
       type: 'sitemap',
       lastmod: '2026-11-01T00:00:00.000Z',
@@ -44,13 +50,13 @@ const mapResponse = () => ({
       engine: 'http',
       proxy: 'basic',
     },
-    pagination: { page: 1, limit: 5000, total: 2, total_pages: 1, has_more: false },
+    pagination: { page: 1, limit: 5000, total: 3, total_pages: 1, has_more: false },
     truncation: {
       storage_capped: false,
       response_capped: false,
-      total_before_max_results: 2,
-      total_before_max_urls: 2,
-      total_detected_before_storage_cap: 2,
+      total_before_max_results: 3,
+      total_before_max_urls: 3,
+      total_detected_before_storage_cap: 3,
       discovery_capped: true,
       sitemaps_skipped: 1,
       unread_sitemaps: ['https://example.com/sitemaps/products-2.xml.gz'],
@@ -104,10 +110,48 @@ describe('map tool, new map shape', () => {
       const { tools } = await h.client.listTools()
       const description = tools.find(t => t.name === 'map')?.description ?? ''
       expect(description).toContain('`sitemap_url`')
-      expect(description).toContain('`entries: "sitemaps"`')
+      expect(description).toContain('`depth: 1` and `entries: "sitemaps"`')
+      expect(description).not.toContain('`depth: 0`')
       expect(description).toContain('unread_sitemaps')
       expect(description).toContain('too_many_requests')
       expect(description).not.toContain('max_urls')
+    })
+
+    it('names every link type in the map description', async () => {
+      const { tools } = await h.client.listTools()
+      const description = tools.find(t => t.name === 'map')?.description ?? ''
+      expect(description).toContain('`type` is `page`, `sitemap` or')
+      expect(description).toContain('`sitemap_index`')
+    })
+
+    it('says that modified_since reads every sitemap file, whatever its date', async () => {
+      const { tools } = await h.client.listTools()
+      const map = tools.find(t => t.name === 'map')
+      const props = map?.inputSchema.properties as Record<string, { description?: string }>
+      for (const text of [map?.description ?? '', props.modified_since?.description ?? '']) {
+        expect(text).toContain('Every sitemap file is read whatever its own')
+        expect(text).toContain('`entries: "pages"`')
+        expect(text).not.toMatch(/older `?lastmod`? is not read/)
+      }
+    })
+
+    it('gives depth 1 with entries "sitemaps" as the way to list a sitemap tree', async () => {
+      const { tools } = await h.client.listTools()
+      const props = tools.find(t => t.name === 'map')?.inputSchema.properties as Record<
+        string,
+        { description?: string }
+      >
+      expect(props.depth?.description).toContain('`depth: 1` with `entries: "sitemaps"`')
+      expect(props.entries?.description).toContain('`sitemap_index`')
+    })
+
+    it('lists sitemap_index among the known link types in the output schema', async () => {
+      const { tools } = await h.client.listTools()
+      const schema = tools.find(t => t.name === 'map')?.outputSchema as unknown as {
+        properties: { links: { items: { properties: { type: { anyOf: { enum?: string[] }[] } } } } }
+      }
+      const known = schema.properties.links.items.properties.type.anyOf.find(s => s.enum)?.enum
+      expect(known).toEqual(['page', 'sitemap', 'sitemap_index'])
     })
 
     it('documents type, lastmod and the new truncation fields in the output schema, as optional', async () => {
@@ -209,7 +253,7 @@ describe('map tool, new map shape', () => {
     it('returns type, lastmod and the truncation fields as the api sent them', async () => {
       h.mock.map.mockResolvedValueOnce(mapResponse())
 
-      const res = await h.client.callTool(mapCall({ depth: 0, entries: 'sitemaps' }))
+      const res = await h.client.callTool(mapCall({ depth: 1, entries: 'sitemaps' }))
 
       expect(res.isError).toBeFalsy()
       expect(res.structuredContent).toEqual(mapResponse())
@@ -241,7 +285,7 @@ describe('map tool, new map shape', () => {
         new RateLimitError('The site is rate limiting.', { status: 429 })
       )
 
-      const res = await h.client.callTool(mapCall({ depth: 0, entries: 'sitemaps' }))
+      const res = await h.client.callTool(mapCall({ depth: 1, entries: 'sitemaps' }))
 
       expect(res.isError).toBe(true)
       expect(JSON.stringify(res.content)).toContain('[too_many_requests]')

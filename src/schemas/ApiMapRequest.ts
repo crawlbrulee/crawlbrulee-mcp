@@ -63,7 +63,10 @@ export const Schema_ApiMapRequest = z.object({
         'and fragment are dropped; known tracking parameters are removed before the request is ' +
         'processed.'
     ),
-  proxy: Schema_ApiProxyType.default('auto').describe('Proxy tier to use for fetching'),
+  proxy: Schema_ApiProxyType.default('auto').describe(
+    'Proxy tier. Defaults to auto: we start on basic and move to a stronger proxy on our own ' +
+      'when a site needs it, and bill the tier that delivered. basic or advanced pins the tier.'
+  ),
   sitemap_only: z
     .boolean()
     .default(false)
@@ -111,18 +114,22 @@ export const Schema_ApiMapRequest = z.object({
     .describe(
       `How many levels of nested sitemaps to follow: 0 to 3, default ${DEFAULT_API_MAP_DEPTH}. With \`sitemap_url\`, ` +
         "level 0 is that file, and it is read. Without it, level 0 is the list of the site's " +
-        'top sitemap files, which 0 returns without reading them: `depth: 0` with ' +
-        '`entries: "sitemaps"` lists them. A sitemap index holds only sitemap files, so reading ' +
-        'one at a low depth with `entries: "pages"` returns no pages: ask with ' +
-        '`entries: "sitemaps"` or a higher depth. A site with a deeper tree is mapped in ' +
-        'several calls, one per file.'
+        'top sitemap files, which 0 returns without reading their entries. A top file found ' +
+        'at one of the usual addresses can still show as `sitemap_index`, because finding it ' +
+        'shows its kind. A sitemap index holds only sitemap files, so reading one at a low ' +
+        'depth with `entries: "pages"` returns no pages: ask with `entries: "sitemaps"` or a ' +
+        'higher depth. `depth: 1` with `entries: "sitemaps"` lists the site\'s top sitemap ' +
+        'files and every file they list, in one call. A listed file shows as `sitemap` until a ' +
+        'map opens it, even when it is a sitemap index itself. To go deeper, read a listed file ' +
+        'with `sitemap_url`, or ask with a higher depth. A large site can reach `max_results` ' +
+        'or a discovery limit first; `discovery_cap_reason` then says which.'
     ),
   entries: z
     .enum(API_MAP_ENTRIES_VALUES)
     .optional()
     .describe(
-      'What to return: `pages` (page addresses, the default), `sitemaps` (sitemap files) or ' +
-        '`all` (both).'
+      'What to return: `pages` (page addresses, the default), `sitemaps` (sitemap files, of ' +
+        'type `sitemap` or `sitemap_index`) or `all` (both).'
     ),
   // a plain date is the start of that day in UTC; the api reads it the same way
   modified_since: z
@@ -131,9 +138,11 @@ export const Schema_ApiMapRequest = z.object({
     .describe(
       'Return only entries whose `lastmod` is at or after this date (`2026-11-01`, the start of ' +
         'that day in UTC) or date and time (ISO 8601, with a time zone). An entry with no `lastmod` is left out, so every entry returned matches; ' +
-        'links found on the home page have none, so none is returned. A nested sitemap whose ' +
-        'own `lastmod` is older is not read, so a site that does not update the dates in its ' +
-        'sitemap index can hide changed pages. A request with this field is always mapped ' +
+        'links found on the home page have none, so none is returned. Every sitemap file is ' +
+        'read whatever its own `lastmod`, and each entry returned, a page or a sitemap file, is ' +
+        'judged by its own `lastmod`. With `entries: "sitemaps"`, a sitemap file is returned ' +
+        'when its own `lastmod` matches, not when a page in it does: to find the pages that ' +
+        'changed, ask with `entries: "pages"`. A request with this field is always mapped ' +
         'fresh: it never reads from or adds to the cache, so `cache.max_age` does nothing, and ' +
         'it is priced as a fresh map.'
     ),
