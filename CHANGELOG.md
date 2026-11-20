@@ -4,10 +4,11 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
-## unreleased
+## 1.6.0 (2026-11-20)
 
 ### changed
 
+- depends on `@crawlbrulee/sdk` 1.6.0.
 - **`proxy` and `require_js` descriptions.** `auto`, the default, starts with the lightest way to get the page and steps up on its own when a site needs more: a stronger proxy, a real browser, or both. `require_js` goes straight to a browser; without it, a page that needs one still gets one. text only, no change to the tools' inputs.
 - **`map`: every sitemap file is read whatever its own date, and a new link type.** with `modified_since`, a sitemap file is no longer skipped because of its own `lastmod`: each entry returned is judged by its own `lastmod`. ask with `entries: "pages"` to find the pages that changed. a sitemap file that a map found to be a sitemap index now comes back as type `sitemap_index`. to map a large site in several calls, start with `depth: 1` and `entries: "sitemaps"`, then read each `sitemap` link, plus each `sitemap_index` link that is also in `unread_sitemaps`.
 - **a page with status 444 is not billed.** the `scrape` and `scrape_result` descriptions, the `page_status_code` description in the output schema and the readme add 444 to the page statuses we don't bill. text only.
