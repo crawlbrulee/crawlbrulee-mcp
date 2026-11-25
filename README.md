@@ -171,6 +171,20 @@ the pdf link is a signed link that expires 24 hours after the scrape, like a scr
 }
 ```
 
+**do things on the page first with `actions`.** close a popup, press "load more", or wait for the part you need, then read the page. the actions run in order: `wait`, `scroll`, `wait_for` (an element), `hover` and `click`, with css selectors. up to 12, and 60 seconds for the whole list. they run after `cleanup`, so the ads, popups and cookie banners it removes are gone first. a click that loads a new page is followed: you get that page, and the rest of the list runs there. a list with an action that does something runs in a browser, is billed as a browser scrape, and never uses the cache. the actions cost no extra credits.
+
+```jsonc
+{
+  "url": "https://example.com/products",
+  "actions": [
+    { "type": "click", "selector": "#load-more" },
+    { "type": "wait_for", "selector": ".product:nth-child(40)" },
+  ],
+}
+```
+
+the response `actions` says what happened to each one: `ok`, `failed`, `skipped` (it failed, but you marked it `optional`) or `not_run`. a failed action stops the list, and the page still comes back as it was then, with the `actions_incomplete` warning. when you know the next page's url, such as `?page=2`, scrape it directly instead of clicking to it: the page loads once, so it comes back faster, and it can come from the cache. a long list on a slow page can take longer than your app waits for a tool reply: use `scrape_async` for it. if a try fails and is tried again, the actions run again from the start, so don't use them for anything that must happen only once, such as an order. see [actions](https://crawlbrulee.com/docs/scrape/actions).
+
 **output** — full scrape result. page metadata (title, OG tags, etc.) is returned under `metadata`. extracted `images` are returned as absolute urls — query strings are preserved, and relative `src`s are resolved against the page url. screenshots and pdfs are returned as signed download urls the agent can fetch separately. in rare cases a screenshot can't be captured: when you requested other outputs too, the `screenshot` field is left out while the rest is still returned. a screenshot-only call (every other format off: `markdown: false` and `metadata: false`, and no `cleaned_html`, `raw_html`, `links`, `images` or `elements`) that can't deliver errors instead (`unsupported_screenshot_output`, HTTP 422, when the content type can't be screenshotted) and isn't billed. a pdf-only call works the same way, with `unsupported_pdf_output`. when no capture could be made at all, such a call fails with `internal_server_error` (HTTP 500), also not billed. a `scrape_async` job that asks only for a screenshot, a pdf or both and gets none ends `failed` and isn't billed: `scrape_result` then returns the same `unsupported_screenshot_output` or `unsupported_pdf_output`, or `job_failed` when the capture could not be made. the result also carries `page_status_code` and a top-level `response_meta.usage` block:
 
 ```jsonc

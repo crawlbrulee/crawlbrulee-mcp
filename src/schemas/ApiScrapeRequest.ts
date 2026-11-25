@@ -1,8 +1,10 @@
 import { z } from 'zod'
+import { DEFAULT_SCRAPE_SCREENSHOT_DEVICE_MODE } from './ScrapeScreenshotRules.js'
 import {
-  DEFAULT_SCRAPE_SCREENSHOT_DEVICE_MODE,
-  MAX_SCRAPE_SCREENSHOT_ACTIONS_BEFORE,
-} from './ScrapeScreenshotRules.js'
+  MAX_SCRAPE_ACTIONS,
+  SCRAPE_ACTIONS_TIME_BUDGET_MS,
+  Schema_ApiScrapeActions,
+} from './ApiScrapeActionsSchemas.js'
 import { DEFAULT_SCRAPE_CLEANUP, Schema_ApiScrapeCleanup } from './ScrapeCleanupSchemas.js'
 import {
   HEADERS_AND_COOKIES_CHAT_NOTE,
@@ -20,9 +22,7 @@ import {
   Schema_ApiScrapeScreenshotType,
   Schema_ScrapeScreenshotAfterAction,
   Schema_ScrapeScreenshotColorScheme,
-  Schema_ScrapeScreenshotBeforeAction,
   Schema_ScrapeScreenshotDeviceMode,
-  refineScrapeScreenshotActionsBefore,
 } from './ScrapeScreenshotSchemas.js'
 
 export const DEFAULT_API_SCRAPE_CACHE_MAX_AGE_SECONDS = 2 * 24 * 60 * 60
@@ -70,11 +70,6 @@ export const Schema_ApiScrapeFormatScreenshot = z
         'switch on the page, looks the same as with `light`. When the request also asks for ' +
         '`extract.pdf`, the PDF shows the dark theme too. No extra credits.'
     ),
-    actions_before: z
-      .array(Schema_ScrapeScreenshotBeforeAction)
-      .max(MAX_SCRAPE_SCREENSHOT_ACTIONS_BEFORE)
-      .default([])
-      .describe('Actions to perform before taking the screenshot (wait, scroll)'),
     actions_after: z
       .array(Schema_ScrapeScreenshotAfterAction)
       .max(1)
@@ -82,7 +77,6 @@ export const Schema_ApiScrapeFormatScreenshot = z
       .describe('Actions to perform after taking the screenshot (e.g. slice into tiles)'),
   })
   .strict()
-  .superRefine(refineScrapeScreenshotActionsBefore)
   .describe('Screenshot capture configuration')
 
 export const Schema_ApiScrapeCache = z
@@ -237,6 +231,29 @@ export const Schema_ApiScrapeRequest = z
         'that page. A request with headers or cookies never reads from or writes to the ' +
         'cache. On a plain http url they travel unencrypted. ' +
         `${HEADERS_AND_COOKIES_CHAT_NOTE} See ${HEADERS_AND_COOKIES_DOCS_URL}.`
+    ),
+    actions: Schema_ApiScrapeActions.optional().describe(
+      'Things to do on the page, in order, before it is read: `wait`, `scroll`, `wait_for` ' +
+        '(an element), `hover` and `click`, with CSS selectors. Every output, the screenshot ' +
+        'and the PDF included, shows the page as the actions left it. A list with an action ' +
+        'that does something runs in a browser, so it is billed as a browser scrape, and never ' +
+        'reads from or writes to the cache. The actions run after `cleanup`: ads, popups and ' +
+        'cookie banners (with `cleanup.ads_and_popups` on) and the elements in ' +
+        '`cleanup.exclude_selectors` are removed first, also from a page a click loads. A popup ' +
+        'that opens later can still be in the way of a click and make it fail, so click the ' +
+        "popup's close button first. " +
+        `Up to ${MAX_SCRAPE_ACTIONS} actions, and ${SCRAPE_ACTIONS_TIME_BUDGET_MS / 1000} s for ` +
+        'the whole list, waits and scroll durations included. An action that fails stops the ' +
+        'list: the page still comes back as it is then, billed as usual, with the ' +
+        '`actions_incomplete` warning; mark an action `optional` to go on past it. The response ' +
+        'reports each action in `actions`. A click that loads a new page is followed: the ' +
+        'response is that page (its url, its `page_status_code`, its content), and the rest of ' +
+        'the list runs there. A click that opens a new tab is ignored. When you know the next ' +
+        "page's url, such as `?page=2`, scrape that url directly instead of clicking to it: the " +
+        'page loads once, so it comes back faster, and it can come from the cache. If a try ' +
+        'fails and we try again, the actions run again from the start, so do not use them for ' +
+        'anything that must happen only once, such as an order. The actions themselves cost no ' +
+        'extra credits.'
     ),
     cookies: Schema_ScrapeCookies.optional().describe(
       'Your own cookies to send to the site with the request. Each is a `name` and a ' +

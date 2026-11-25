@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { openEnum } from './openEnum.js'
+import { Schema_ApiScrapeActionReportEntry } from './ApiScrapeActionsSchemas.js'
 import { Schema_ScrapeElementValues } from './ScrapeElementsSchemas.js'
 
 export const Schema_ApiViewport = z.looseObject({
@@ -188,11 +189,21 @@ export const Schema_ApiScrapeSuccessResponse = z.looseObject({
   metadata: Schema_ApiScrapeMeta.optional().describe(
     'Extracted page metadata (title, OG tags, etc.)'
   ),
+  actions: z
+    .array(Schema_ApiScrapeActionReportEntry)
+    .optional()
+    .describe(
+      'What happened to each action the request sent, in the same order: its `type` and its ' +
+        '`status`. Present only when the request sent actions. When any action is `failed` ' +
+        'or `not_run`, `warnings` has `actions_incomplete`. When the page could not be loaded ' +
+        'in a browser and was fetched without one, every action that acts on the page is ' +
+        '`not_run`.'
+    ),
   warnings: z
     .array(z.string())
     .optional()
     .describe(
-      'Non-error notices about the scrape. Truncation codes — `screenshot_truncated` (long page exceeded the scrolling-screenshot height cap), `links_truncated` / `inline_images_truncated` (page had more links/images than the per-page extraction caps), `raw_html_truncated` (rendered HTML exceeded the per-page size budget) — mean the field is present but capped. `elements_truncated` means at least one `elements` value hit a limit: a list was cut at 1,000 matches, the request reached 10,000 matches in total, or a value did not fit the ~1 MB of values allowed per request (that value is then null, never cut short). Unavailability codes — `links_unavailable` / `inline_images_unavailable` / `metadata_unavailable` — mean that optional field could not be extracted and was omitted (null/empty) while the rest of the scrape succeeded, so an empty field carrying one of these does NOT mean the page had none. `screenshot_unavailable` means a screenshot was asked for, but the page came back from the http engine without one. `pdf_unavailable` means a PDF was asked for, but the page came back without one: it came back from the http engine, the site answered an empty error page, the PDF was over 50 MB, or it did not finish in time. `pdf_single_page_overflow` means a `single_page` PDF was taller than the 15,000 px page limit and goes on over more pages. `custom_user_agent` means the request set its own `User-Agent` header; this can lower the success rate. Stable string codes — clients can switch on them. Warnings are stored with the result: async result fetches and cache hits carry them too, filtered to the fields the request asked for. `metadata_truncated` is retired and no longer sent: metadata has no size limit of its own now, though the code can still appear on results stored before that change.'
+      'Non-error notices about the scrape. Truncation codes — `screenshot_truncated` (long page exceeded the scrolling-screenshot height cap), `links_truncated` / `inline_images_truncated` (page had more links/images than the per-page extraction caps), `raw_html_truncated` (rendered HTML exceeded the per-page size budget) — mean the field is present but capped. `elements_truncated` means at least one `elements` value hit a limit: a list was cut at 1,000 matches, the request reached 10,000 matches in total, or a value did not fit the ~1 MB of values allowed per request (that value is then null, never cut short). Unavailability codes — `links_unavailable` / `inline_images_unavailable` / `metadata_unavailable` — mean that optional field could not be extracted and was omitted (null/empty) while the rest of the scrape succeeded, so an empty field carrying one of these does NOT mean the page had none. `screenshot_unavailable` means a screenshot was asked for, but the page came back from the http engine without one. `pdf_unavailable` means a PDF was asked for, but the page came back without one: it came back from the http engine, the site answered an empty error page, the PDF was over 50 MB, or it did not finish in time. `pdf_single_page_overflow` means a `single_page` PDF was taller than the 15,000 px page limit and goes on over more pages. `custom_user_agent` means the request set its own `User-Agent` header; this can lower the success rate. `actions_incomplete` means at least one action in `actions` failed or never ran: `actions` says which, and the page is the one the actions left. Stable string codes — clients can switch on them. Warnings are stored with the result: async result fetches and cache hits carry them too, filtered to the fields the request asked for. `metadata_truncated` is retired and no longer sent: metadata has no size limit of its own now, though the code can still appear on results stored before that change.'
     ),
   response_meta: Schema_ApiResponseMeta.describe(
     'Request-level metadata. `response_meta.usage` reports what the request cost (total_credit_cost and its parts), the billed engine and the resolved proxy tier.'

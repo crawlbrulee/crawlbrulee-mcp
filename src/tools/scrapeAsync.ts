@@ -17,6 +17,8 @@ const DESCRIPTION = [
   'Takes `extract.elements` like `scrape` (named values by CSS selector, no extra credits); the',
   'result carries them in `elements`. Rules: https://crawlbrulee.com/docs/scrape/targeted-extraction.',
   'Takes `extract.pdf` (save the page as a PDF) and `extract.screenshot.color_scheme` like `scrape`.',
+  'Takes `actions` like `scrape` (wait, scroll, wait_for, hover, click); the result reports each',
+  'one in `actions`. A long action list on a slow page is a good fit for this tool.',
   'Optionally attach a per-job completion `webhook`: we deliver a single',
   'signed `scrape.complete` POST to your endpoint when the job finishes (HTTPS required',
   'in production), and echoes your opaque `webhook.metadata` back in the delivery',
