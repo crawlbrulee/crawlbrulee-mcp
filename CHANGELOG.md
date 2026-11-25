@@ -4,7 +4,7 @@ all notable changes to `@crawlbrulee/mcp` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
-## 2.0.0 (unreleased)
+## 2.0.0 (2026-11-25)
 
 ### added
 
