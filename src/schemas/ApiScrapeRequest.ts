@@ -253,7 +253,8 @@ export const Schema_ApiScrapeRequest = z
         'page loads once, so it comes back faster, and it can come from the cache. If a try ' +
         'fails and we try again, the actions run again from the start, so do not use them for ' +
         'anything that must happen only once, such as an order. The actions themselves cost no ' +
-        'extra credits.'
+        'extra credits. To fill in and send a form (type text into a field, pick an option in a ' +
+        'dropdown), call the HTTP API: this server does not offer those actions.'
     ),
     cookies: Schema_ScrapeCookies.optional().describe(
       'Your own cookies to send to the site with the request. Each is a `name` and a ' +

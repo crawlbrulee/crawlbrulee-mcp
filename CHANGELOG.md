@@ -8,7 +8,7 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 
 ### added
 
-- **`actions` on `scrape` and `scrape_async`.** do things on the page before it is read: `wait`, `scroll` (by pixels, to an edge or to an element, with an optional duration), `wait_for` (an element), `hover` and `click`, with css selectors. up to 12 actions, and 60 seconds for the whole list. they run after `cleanup`. a click that loads a new page is followed, and the rest of the list runs there. mark an action `optional` to go on past it when it fails. the input schema checks the shapes, the count and the 60 seconds; the api checks the css selectors.
+- **`actions` on `scrape` and `scrape_async`.** do things on the page before it is read: `wait`, `scroll` (by pixels, to an edge or to an element, with an optional duration), `wait_for` (an element), `hover` and `click`, with css selectors. up to 12 actions, and 60 seconds for the whole list. they run after `cleanup`. a click that loads a new page is followed, and the rest of the list runs there. mark an action `optional` to go on past it when it fails. the input schema checks the shapes, the count and the 60 seconds; the api checks the css selectors. to fill in and send a form (type text into a field, pick an option in a dropdown), call the http api: this server doesn't offer those actions.
 - the output schemas carry the `actions` report, one `{ type, status }` per action, with the status `ok`, `failed`, `skipped` or `not_run`, and name the `actions_incomplete` warning. the tool descriptions and the readme say when to scrape a page's url directly instead of clicking to it, and to use `scrape_async` for a long list on a slow page.
 
 ### removed

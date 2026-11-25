@@ -100,6 +100,10 @@ describe('actions', () => {
         expect(text).toContain('directly instead of clicking')
       }
       expect(scrape.description).toContain('scrape_async')
+      // Forms are the http api's: this server offers only the five reading actions.
+      for (const text of [scrape.description ?? '', actionsText ?? '']) {
+        expect(text).toContain('call the HTTP API')
+      }
     })
 
     it('offers no actions_before on the screenshot', async () => {
