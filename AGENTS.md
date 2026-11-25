@@ -47,19 +47,6 @@ creates the GitHub release.
 - the official MCP registry is a separate step: once the npm publish has finished, run the
   `Publish to MCP Registry` workflow by hand (`gh workflow run "Publish to MCP Registry" --ref main`).
   the registry checks the npm package for the same `mcpName`.
-- then move the pin in `crawlbrulee-skills`: its plugin starts one exact version,
-  because plugin stores refuse an unpinned launcher. change
-  `npx -y @crawlbrulee/mcp@X.Y.Z` in `.mcp.json`, `mcp.json` and
-  `gemini-extension.json` and the version in its readme, then give the skills
-  repo a patch release (all six manifests, changelog), push `main`, then push its
-  `vX.Y.Z` tag; the Gemini gallery only lists tagged repos. don't ship a
-  lockfile with a `node ${CLAUDE_PLUGIN_ROOT}/node_modules/...` launcher there:
-  Grok reads Claude's `.mcp.json` but never installs the lockfile (tried in
-  skills 1.3.2, reverted in 1.3.3).
-- then change the version by hand on cursor.directory: its listing holds its own
-  copy of the install config, which a skills release does not update. signed in,
-  open https://cursor.directory/plugins/crawlbrulee → "Plugin options" → Edit,
-  set the version in the mcp server's `args`, keep the key as
-  `"${env:CRAWLBRULEE_API_KEY}"`, then "Update Plugin". don't use "Re-scan": it
-  reads Claude's `.mcp.json` and brings back `${user_config.api_key}`, which
-  only Claude Code fills in.
+- nothing else moves with an mcp release: the `crawlbrulee-skills` plugin and the
+  cursor.directory listing both point at the hosted server
+  (`https://api.crawlbrulee.com/mcp`), not at a pinned npm version.
